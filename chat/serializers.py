@@ -7,12 +7,16 @@ from chat import models as m
 from rest_framework_simplejwt.views import TokenObtainPairView , TokenObtainPairView, TokenRefreshView
 
 # Token Serializers
-class MyTokenObtainPairView(TokenObtainPairView):
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
         token['username'] = user.username
-        token['authority'] = m.ChatUser.authorityLevel
+
+        requested_chatUser_data = m.ChatUser.objects.get(user=user)
+
+        token['authority'] = requested_chatUser_data.authorityLevel
+
 
         return token
 

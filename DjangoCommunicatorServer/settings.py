@@ -40,7 +40,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_simplejwt',
-    
+
     'chat.apps.ChatConfig'
 ]
 
@@ -110,6 +110,12 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
+}
+
+SIMPLE_JWT = {
+  # It will work instead of the default serializer(TokenObtainPairSerializer).
+  "TOKEN_OBTAIN_SERIALIZER": "chat.serializers.MyTokenObtainPairSerializer",
+  # ...
 }
 
 

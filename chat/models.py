@@ -16,7 +16,8 @@ from django.contrib.auth.models import User, Permission
 #user profile
 class ChatUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nickname = models.CharField(max_length=30)
+
+    nickname = models.CharField(max_length=30,default="")
     authorityLevel =  models.IntegerField(default=0)
 
     def __str__(self):
