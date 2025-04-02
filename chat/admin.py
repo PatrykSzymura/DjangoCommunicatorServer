@@ -4,4 +4,4 @@ from django.contrib import admin
 from django.contrib import admin
 from chat import models as m
 
-#admin.site.register(m.AuthUser)
+admin.site.register(m.ChatUser)
