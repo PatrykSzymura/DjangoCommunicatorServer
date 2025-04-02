@@ -2,6 +2,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
+
 from chat import models as m
 
 from rest_framework_simplejwt.views import TokenObtainPairView , TokenObtainPairView, TokenRefreshView
@@ -22,20 +23,32 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 # User Serializers
-class ChatUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = m.ChatUser
-        fields = '__all__'
-        extra_kwargs = {"password": {"write_only": True}}
+        model = m.User
+        fields = ('id', 'username','password', 'first_name', 'last_name', 'email')
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = m.ChatUser.objects.create(**validated_data)
         return user
+
     def update(self, instance, validated_data):
         if 'password' in validated_data:
             password = validated_data.pop('password', None)
             instance.set_password(password)
         return super().update(instance, validated_data)
+
+
+class ChatUserSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = m.ChatUser
+        fields = '__all__'
+        extra_kwargs = {"password": {"write_only": True}}
+
+
 
 class ChatUserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
