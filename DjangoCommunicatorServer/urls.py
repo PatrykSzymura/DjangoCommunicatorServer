@@ -16,6 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.contrib.messages import api
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -25,7 +26,5 @@ urlpatterns = [
         path('admin/', admin.site.urls),
         path('', chat_views.index, name='index'),
         path('api-auth/', include('rest_framework.urls')),
-        path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-        path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-        path('api/get/users/', chat_views.ListChatUsersView.as_view(), name='get_chat_users'),
+        path('api/', include('chat.urls')),
 ]

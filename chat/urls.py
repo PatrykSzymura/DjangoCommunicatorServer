@@ -6,5 +6,26 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from chat import views as v
+import chat.views as v
+urlpatterns = [
 
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # USERS ENDPOINTS
+    path('user/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('user/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('user/get/all/', v.ListChatUsersView.as_view(), name='get_chat_users'),
+    #path('user/create/'),
+    #path('user/update/'),
+
+    # CHANNELS ENDPOINTS
+    #path('channel/create/new/'),
+    path('channel/get/list/', v.ChannelView.as_view(), name='get_chat_channels'),
+    path('channel/get/details/<int:pk>/', v.ChannelViewDetails.as_view(), name='get_chat_channel_data'),
+    path('channel/update/<int:pk>/', v.ChannelView.as_view(), name='update_chat_channel'),
+    path('channel/delete/<int:pk>/', v.ChannelView.as_view(), name='delete_chat_channel'),
+
+    #MESSAGES management ENDPOINTS
+
+
+]
