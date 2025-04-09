@@ -57,11 +57,13 @@ class ChannelCreateView(generics.CreateAPIView):
 
 class ChannelMembersView(generics.RetrieveAPIView):
     def get_queryset(self):
-        queryset = m.ChannelMembers.objects.filter(cha)
+        queryset = m.ChannelMembers.objects.all()
     serializer_class = ChannelMembersSerializer
     permission_classes = (AllowAny,)
 
 
 class MessagesView(generics.ListAPIView):
     def get_queryset(self):
-        return m.Messages.objects.filter(channel_id=self.kwargs['pk'])
+        return m.Messages.objects.filter(channelId=self.kwargs['pk'])
+    serializer_class = s.MessageSerializers
+    permission_classes = (AllowAny,)
