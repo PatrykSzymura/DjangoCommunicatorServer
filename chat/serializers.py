@@ -94,5 +94,9 @@ class ChannelDetailSerializer(serializers.ModelSerializer):
     users    = ChatUserSerializer(many=True, read_only=True)
     class Meta:
         model = m.Channel
-        fields = ['id','name','messages','users']
+        fields = ['id','name']
+class ChannelMembersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.ChannelMembers
+        fields = '__all__'
 

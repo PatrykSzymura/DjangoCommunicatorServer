@@ -5,10 +5,11 @@ from django.template.loader import render_to_string
 
 # Create your views here.
 from django.http import HttpResponse
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
-from chat.serializers import MyTokenObtainPairSerializer, ChatUserSerializer, ChannelSerializer, ChannelDetailSerializer
+from chat.serializers import MyTokenObtainPairSerializer, ChatUserSerializer, ChannelSerializer, \
+    ChannelDetailSerializer, ChannelMembersSerializer
 from chat import models as m
 from chat import serializers as s
 
@@ -19,6 +20,12 @@ def index(request):
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+class UserDataViewSet(generics.ListAPIView):
+    def get_queryset(self):
+        return m.User.objects.filter(id=self.kwargs['pk'])
+
+    serializer_class = s.UserSerializer
+    permission_classes = [AllowAny]
 
 class CreateChatView(generics.CreateAPIView):
     queryset = m.ChatUser.objects.all()
@@ -48,15 +55,13 @@ class ChannelCreateView(generics.CreateAPIView):
         else:
             print(serializer.errors)
 
-
-
-class ChannelViewDetails(generics.ListAPIView):
-    serializer_class = ChannelDetailSerializer
-
+class ChannelMembersView(generics.RetrieveAPIView):
     def get_queryset(self):
-        x : QuerySet = m.Messages.objects.filter(channelId=self.kwargs['pk'])
-        y : QuerySet = m.ChannelMembers.objects.filter(channelId=self.kwargs['pk'])
-        z = x | y
+        queryset = m.ChannelMembers.objects.filter(cha)
+    serializer_class = ChannelMembersSerializer
+    permission_classes = (AllowAny,)
 
-        print(z)
-        return m.Channel.objects.filter(id=self.kwargs['pk'])
+
+class MessagesView(generics.ListAPIView):
+    def get_queryset(self):
+        return m.Messages.objects.filter(channel_id=self.kwargs['pk'])
