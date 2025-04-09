@@ -21,7 +21,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return token
 
-
 # User Serializers
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,7 +38,6 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         return super().update(instance, validated_data)
 
-
 class ChatUserSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
@@ -47,8 +45,6 @@ class ChatUserSerializer(serializers.ModelSerializer):
         model = m.ChatUser
         fields = '__all__'
         extra_kwargs = {"password": {"write_only": True}}
-
-
 
 class ChatUserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -81,4 +77,22 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         print(validated_data)
         return instance
 
+# MESSAGES Serializers
+class  MessageSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = m.Messages
+        fields = "__all__"
+
 # Chat Serializers
+class ChannelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.Channel
+        fields = ['id', 'name']
+
+class ChannelDetailSerializer(serializers.ModelSerializer):
+    messages = MessageSerializers(many=True, read_only=True)
+    users    = ChatUserSerializer(many=True, read_only=True)
+    class Meta:
+        model = m.Channel
+        fields = ['id','name','messages','users']
+
