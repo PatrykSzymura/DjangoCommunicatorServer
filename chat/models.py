@@ -43,7 +43,7 @@ class ChannelMembers(models.Model):
 class Messages(models.Model):
     id = models.AutoField(primary_key=True)
     channelId = models.ForeignKey(Channel,on_delete=models.CASCADE)
-    userId = models.ForeignKey(ChatUser,on_delete=models.SET(get_deleted_user))
+    author = models.ForeignKey(ChatUser,on_delete=models.SET(get_deleted_user))
     date = models.DateTimeField(auto_now_add=True)
     was_edited = models.BooleanField(default=False)
     edit_date = models.DateTimeField(auto_now=True)

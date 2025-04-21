@@ -28,5 +28,8 @@ urlpatterns = [
 
     #MESSAGES management ENDPOINTS
     path('messages/get/all/<int:pk>', v.MessagesView.as_view(), name='get_all_messages_for_chat'),
+    path('messages/post/', v.MessagesCreateView.as_view(), name='post_messege'),
+
+    #path('messages/post/', v.MessagesViewSet.as_view({'get': 'list'}), name='get_all_messages'),
 
 ]

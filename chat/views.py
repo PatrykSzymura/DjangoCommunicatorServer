@@ -1,4 +1,5 @@
 from django.contrib.messages.context_processors import messages
+from django.contrib.messages.storage.cookie import MessageSerializer
 from django.db.models import QuerySet
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -6,6 +7,7 @@ from django.template.loader import render_to_string
 # Create your views here.
 from django.http import HttpResponse
 from rest_framework import generics, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
 from chat.serializers import MyTokenObtainPairSerializer, ChatUserSerializer, ChannelSerializer, \
@@ -67,3 +69,23 @@ class MessagesView(generics.ListAPIView):
         return m.Messages.objects.filter(channelId=self.kwargs['pk'])
     serializer_class = s.MessageSerializers
     permission_classes = (AllowAny,)
+
+class MessagesCreateView(generics.CreateAPIView):
+    queryset = m.Messages.objects.all()
+    serializer_class = s.MessageSerializers
+    permission_classes = (AllowAny,)
+    def perform_create(self, serializer):
+
+        author = serializer.validated_data
+        #print(author)
+        if serializer.is_valid():
+            serializer.save()
+
+class MessagesViewSet(viewsets.ModelViewSet):
+    queryset = m.Messages.objects.all()
+    serializer_class = s.MessageSerializers
+
+    @action(detail=True, methods=['post'])
+    def send_Messege(self,request,pk):
+        message = self.get_object()
+        print(message)

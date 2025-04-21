@@ -48,6 +48,13 @@ class ChatUserSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {"password": {"write_only": True}}
 
+class ChatUserMinimumDataSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    class Meta:
+        model = m.ChatUser
+        fields = ('user','nickname')
+        extra_kwargs = {"password": {"write_only": True}}
+
 class ChatUserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.ChatUser
@@ -81,9 +88,17 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
 # MESSAGES Serializers
 class  MessageSerializers(serializers.ModelSerializer):
+    author = serializers.PrimaryKeyRelatedField(queryset=m.ChatUser.objects.all())
     class Meta:
         model = m.Messages
-        fields = "__all__"
+        fields = ['id', 'date', 'was_edited', 'edit_date', 'message', 'author', 'channelId']
+
+    def perform_create(self, serializer):
+        pass
+    def create(self, validated_data):
+        message = m.Messages.objects.create(**validated_data)
+        return message
+
 
 # Chat Serializers
 class ChannelSerializer(serializers.ModelSerializer):
@@ -97,6 +112,7 @@ class ChannelDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.Channel
         fields = ['id','name']
+
 class ChannelMembersSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.ChannelMembers
