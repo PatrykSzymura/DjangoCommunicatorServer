@@ -7,8 +7,9 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 import chat.views as v
-urlpatterns = [
+from .routing import websocket_urlpatterns
 
+urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # USERS ENDPOINTS
@@ -19,7 +20,7 @@ urlpatterns = [
     #path('user/create/'),
     #path('user/update/'),
 
-    # CHANNELS ENDPOINTS
+    # CHAT-CHANNELS ENDPOINTS
     #path('channel/create/new/'),
     path('channel/get/list/', v.ChannelView.as_view(), name='get_chat_channels'),
     path('channel/get/members/<int:pk>', v.ChannelMembersView.as_view(), name='get_chat_channel_data'),
@@ -33,3 +34,4 @@ urlpatterns = [
     #path('messages/post/', v.MessagesViewSet.as_view({'get': 'list'}), name='get_all_messages'),
 
 ]
+urlpatterns += websocket_urlpatterns
