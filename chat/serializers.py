@@ -20,7 +20,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         token['authority'] = requested_chatUser_data.authorityLevel
 
-
         return token
 
 # User Serializers
