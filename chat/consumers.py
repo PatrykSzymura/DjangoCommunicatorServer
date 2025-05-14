@@ -42,46 +42,38 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
-    """
-    Handles WebSocket connections for voice channels.
-    """
+    users = set()  # globalna lista nicków
 
     async def connect(self):
-        # Channel name pulled from the URL
-        self.channel_name = self.scope['url_route']['kwargs']['channel_name']
-        self.group_name = f"voice_{self.channel_name}"
-
-        # Join the voice channel
-        await self.channel_layer.group_add(
-            self.group_name,
-            self.channel_name
-        )
-
+        self.channel_id = self.scope['url_route']['kwargs']['channel_name']
+        self.group_name = f"voice_{self.channel_id}"
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+        self.nickname = None  # ustawione po JOIN
 
     async def disconnect(self, close_code):
-        # Leave the voice channel
-        await self.channel_layer.group_discard(
-            self.group_name,
-            self.channel_name
-        )
+        if self.nickname:
+            self.__class__.users.discard(self.nickname)
+            await self.broadcast_users()
+
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data):
-        """
-        Handle incoming WebRTC signaling messages and broadcast.
-        """
-        # Broadcast message to the group
+        if text_data.startswith("JOIN|"):
+            _, nick, _ = text_data.split("|", 2)
+            self.nickname = nick
+            self.__class__.users.add(nick)
+            await self.broadcast_users()
+
+    async def broadcast_users(self):
+        msg = "USERS|" + "|".join(sorted(self.__class__.users))
         await self.channel_layer.group_send(
             self.group_name,
             {
                 "type": "voice_message",
-                "message": text_data,
+                "message": msg,
             }
         )
 
     async def voice_message(self, event):
-        """
-        Handle messages sent to the group.
-        """
-        message = event["message"]
-        await self.send(text_data=message)
+        await self.send(text_data=event["message"])
