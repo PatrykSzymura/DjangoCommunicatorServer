@@ -7,11 +7,18 @@ class MessageSerializers(serializers.ModelSerializer):
         model = m.Messages
         fields = ['id', 'date', 'was_edited', 'edit_date', 'message', 'author', 'channelId']
 
+class CreateSerializer(serializers.ModelSerializer):
+    author = serializers.PrimaryKeyRelatedField(queryset=m.ChatUser.objects.all())
+    class Meta:
+        model = m.Messages
+        fields = ['id', 'message', 'author', 'channelId']
+
     def perform_create(self, serializer):
-        pass
-    def create(self, validated_data):
-        message = m.Messages.objects.create(**validated_data)
-        return message
+        self.instance.was_edited = False
+        self.instance.edit_date = None
+        self.instance.date = self.instance.date.strftime("%Y-%m-%d %H:%M:%S")
+        if serializer.is_valid():
+            serializer.save()
 
 class MessageUpdateSerializer(serializers.ModelSerializer):
     class Meta:

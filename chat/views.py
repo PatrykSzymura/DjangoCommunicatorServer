@@ -69,7 +69,7 @@ class MessagesView(generics.ListAPIView):
 
 class MessagesCreateView(generics.CreateAPIView):
     queryset = m.Messages.objects.all()
-    serializer_class = Messeges.MessageSerializers
+    serializer_class = Messeges.CreateSerializer
     permission_classes = (AllowAny,)
     def perform_create(self, serializer):
 
