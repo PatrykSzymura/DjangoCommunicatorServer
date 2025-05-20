@@ -22,7 +22,9 @@ class GetMembersList(generics.ListAPIView):
 
 class GetMyChannel(generics.ListAPIView):
     def get_queryset(self):
-        return m.ChannelMembers.objects.filter(userId=self.request.user.id)
+        c = m.ChannelMembers.objects.filter(userId=self.request.user.id)
+        print(c.values())
+        return c
     serializer_class = Serializer
     permission_classes = (AllowAny,)
 
@@ -37,3 +39,7 @@ class AddMember(generics.CreateAPIView):
 class DeleteMember(generics.DestroyAPIView):
     queryset = m.ChannelMembers.objects.all()
     serializer_class = Serializer
+    permission_classes = (AllowAny,)
+
+    def perform_destroy(self, instance):
+        print(self.request.user.id)

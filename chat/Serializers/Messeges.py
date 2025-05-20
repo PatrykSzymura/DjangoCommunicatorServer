@@ -23,7 +23,12 @@ class CreateSerializer(serializers.ModelSerializer):
 class MessageUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.Messages
-        fields = ['message']
+        fields = ['message','was_edited']
+
+    def validate(self, attrs):
+        if attrs['was_edited'] == None or attrs['was_edited'] == False:
+           attrs['was_edited'] = True
+        return attrs
 
     def perform_update(self, serializer):
 
