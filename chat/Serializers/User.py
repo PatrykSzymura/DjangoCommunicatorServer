@@ -35,6 +35,11 @@ class ChatUserMinimumDataSerializer(serializers.ModelSerializer):
         fields = ('user','nickname')
         extra_kwargs = {"password": {"write_only": True}}
 
+class NicknameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.ChatUser
+        fields = ('nickname',)
+
 class ChatUserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.ChatUser

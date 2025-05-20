@@ -28,7 +28,7 @@ urlpatterns = [
     path('channel/delete/<int:pk>/', v.ChannelView.as_view(), name='delete_chat_channel'),
 
     # CHANNEL-MEMBERS ENDPOINTS
-    path('api/channel/members/get/<int:pk>', ChannelMembers.GetMembersList.as_view(), name='get_chat_channel_members'),
+    path('channel/members/get/<int:pk>', ChannelMembers.GetMembersList.as_view(), name='get_chat_channel_members'),
     path('channel/members/add/<int:pk>/', ChannelMembers.AddMember.as_view(), name='add_chat_channel_member'),
 
     #MESSAGES management ENDPOINTS
