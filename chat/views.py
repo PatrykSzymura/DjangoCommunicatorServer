@@ -10,10 +10,9 @@ from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
-from chat.serializers import MyTokenObtainPairSerializer, ChatUserSerializer, ChannelSerializer, \
-    ChannelDetailSerializer, ChannelMembersSerializer
+from .Serializers import User, Messeges, Token, Chat
 from chat import models as m
-from chat import serializers as s
+
 
 
 def index(request):
@@ -26,7 +25,7 @@ class UserDataViewSet(generics.ListAPIView):
     def get_queryset(self):
         return m.User.objects.filter(id=self.kwargs['pk'])
 
-    serializer_class = s.UserSerializer
+    serializer_class = User.UserSerializer
     permission_classes = [AllowAny]
 
 class CreateChatView(generics.CreateAPIView):
@@ -34,21 +33,19 @@ class CreateChatView(generics.CreateAPIView):
 
 class ListChatUsersView(generics.ListAPIView):
     queryset = m.ChatUser.objects.all()
-    serializer_class = ChatUserSerializer
+    serializer_class = User.UserSerializer
     permission_classes = (AllowAny,)
-
-
 
 
 # CHANNEL VIEWS
 class ChannelView(generics.ListAPIView):
     queryset = m.Channel.objects.all()
-    serializer_class = ChannelSerializer
+    serializer_class = Chat.ChannelSerializer
     permission_classes = (AllowAny,)
 
 class ChannelCreateView(generics.CreateAPIView):
     queryset = m.Channel.objects.all()
-    serializer_class = ChannelSerializer
+    serializer_class = Chat.ChannelSerializer
     permission_classes = (AllowAny,)
 
     def perform_create(self, serializer):
@@ -60,19 +57,19 @@ class ChannelCreateView(generics.CreateAPIView):
 class ChannelMembersView(generics.RetrieveAPIView):
     def get_queryset(self):
         queryset = m.ChannelMembers.objects.all()
-    serializer_class = ChannelMembersSerializer
+    serializer_class = Chat.ChannelMembersSerializer
     permission_classes = (AllowAny,)
 
 
 class MessagesView(generics.ListAPIView):
     def get_queryset(self):
         return m.Messages.objects.filter(channelId=self.kwargs['pk'])
-    serializer_class = s.MessageSerializers
+    serializer_class = Messeges.MessageSerializers
     permission_classes = (AllowAny,)
 
 class MessagesCreateView(generics.CreateAPIView):
     queryset = m.Messages.objects.all()
-    serializer_class = s.MessageSerializers
+    serializer_class = Messeges.MessageSerializers
     permission_classes = (AllowAny,)
     def perform_create(self, serializer):
 
@@ -81,11 +78,10 @@ class MessagesCreateView(generics.CreateAPIView):
         if serializer.is_valid():
             serializer.save()
 
-class MessagesViewSet(viewsets.ModelViewSet):
-    queryset = m.Messages.objects.all()
-    serializer_class = s.MessageSerializers
+class MessagesUpdateView(generics.UpdateAPIView):
 
-    @action(detail=True, methods=['post'])
-    def send_Messege(self,request,pk):
-        message = self.get_object()
-        print(message)
+    def get_queryset(self):
+        return m.Messages.objects.filter(id=self.kwargs['pk'])
+
+    serializer_class = Messeges.MessageUpdateSerializer
+    permission_classes = (AllowAny,)

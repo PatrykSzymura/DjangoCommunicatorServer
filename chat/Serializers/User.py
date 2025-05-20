@@ -5,24 +5,6 @@ from django.contrib.auth.models import User
 
 from chat import models as m
 
-from rest_framework_simplejwt.views import TokenObtainPairView , TokenObtainPairView, TokenRefreshView
-
-# Token Serializers
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['username'] = user.username
-        token['first_name'] = user.first_name
-        token['last_name'] = user.last_name
-
-        requested_chatUser_data = m.ChatUser.objects.get(user=user)
-
-        token['authority'] = requested_chatUser_data.authorityLevel
-
-        return token
-
-# User Serializers
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.User
@@ -84,36 +66,4 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         print(instance)
         print(validated_data)
         return instance
-
-# MESSAGES Serializers
-class  MessageSerializers(serializers.ModelSerializer):
-    author = serializers.PrimaryKeyRelatedField(queryset=m.ChatUser.objects.all())
-    class Meta:
-        model = m.Messages
-        fields = ['id', 'date', 'was_edited', 'edit_date', 'message', 'author', 'channelId']
-
-    def perform_create(self, serializer):
-        pass
-    def create(self, validated_data):
-        message = m.Messages.objects.create(**validated_data)
-        return message
-
-
-# Chat Serializers
-class ChannelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = m.Channel
-        fields = ['id', 'name']
-
-class ChannelDetailSerializer(serializers.ModelSerializer):
-    messages = MessageSerializers(many=True, read_only=True)
-    users    = ChatUserSerializer(many=True, read_only=True)
-    class Meta:
-        model = m.Channel
-        fields = ['id','name']
-
-class ChannelMembersSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = m.ChannelMembers
-        fields = '__all__'
 
