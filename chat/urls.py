@@ -28,8 +28,11 @@ urlpatterns = [
     path('channel/delete/<int:pk>/', v.ChannelView.as_view(), name='delete_chat_channel'),
 
     # CHANNEL-MEMBERS ENDPOINTS
-    path('channel/members/get/<int:pk>', ChannelMembers.GetMembersList.as_view(), name='get_chat_channel_members'),
+    path('channel/members/get/',ChannelMembers.GetMyChannel.as_view(), name='get_my_chat_channel_members'),
+    path('channel/members/get/<int:pk>/', ChannelMembers.GetMembersList.as_view(), name='get_chat_channel_members'),
     path('channel/members/add/<int:pk>/', ChannelMembers.AddMember.as_view(), name='add_chat_channel_member'),
+
+
 
     #MESSAGES management ENDPOINTS
     path('messages/get/all/<int:pk>', v.MessagesView.as_view(), name='get_all_messages_for_chat'),

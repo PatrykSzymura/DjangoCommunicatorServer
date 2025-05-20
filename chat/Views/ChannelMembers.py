@@ -20,6 +20,12 @@ class GetMembersList(generics.ListAPIView):
     serializer_class = Serializer
     permission_classes = (AllowAny,)
 
+class GetMyChannel(generics.ListAPIView):
+    def get_queryset(self):
+        return m.ChannelMembers.objects.filter(userId=self.request.user.id)
+    serializer_class = Serializer
+    permission_classes = (AllowAny,)
+
 class AddMember(generics.CreateAPIView):
     queryset = m.ChannelMembers.objects.all()
     serializer_class = Serializer
@@ -27,3 +33,7 @@ class AddMember(generics.CreateAPIView):
     def perform_create(self, serializer):
         if serializer.is_valid():
             serializer.save()
+
+class DeleteMember(generics.DestroyAPIView):
+    queryset = m.ChannelMembers.objects.all()
+    serializer_class = Serializer
