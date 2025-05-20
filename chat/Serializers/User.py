@@ -38,7 +38,7 @@ class ChatUserMinimumDataSerializer(serializers.ModelSerializer):
 class NicknameSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.ChatUser
-        fields = ('nickname',)
+        fields = ('id','nickname',)
 
 class ChatUserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
