@@ -17,7 +17,7 @@ def get_deleted_user():
 
 #user profile
 class ChatUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
 
     nickname = models.CharField(max_length=30,default="")
     authorityLevel =  models.IntegerField(default=0)
@@ -38,7 +38,11 @@ class Channel(models.Model):
 
 class ChannelMembers(models.Model):
     id = models.AutoField(primary_key=True)
+    channelId = models.ForeignKey(Channel,on_delete=models.CASCADE)
     userId = models.ForeignKey(ChatUser,on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.userId) + " has access to " +str(self.channelId)
 
 class Messages(models.Model):
     id = models.AutoField(primary_key=True)

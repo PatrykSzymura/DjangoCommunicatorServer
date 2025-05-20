@@ -10,7 +10,7 @@ from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
-from .Serializers import User, Messeges, Token, Chat
+from .Serializers import User, Messeges, Token, Channel
 from chat import models as m
 
 
@@ -40,12 +40,12 @@ class ListChatUsersView(generics.ListAPIView):
 # CHANNEL VIEWS
 class ChannelView(generics.ListAPIView):
     queryset = m.Channel.objects.all()
-    serializer_class = Chat.ChannelSerializer
+    serializer_class = Channel.ChannelSerializer
     permission_classes = (AllowAny,)
 
 class ChannelCreateView(generics.CreateAPIView):
     queryset = m.Channel.objects.all()
-    serializer_class = Chat.ChannelSerializer
+    serializer_class = Channel.ChannelSerializer
     permission_classes = (AllowAny,)
 
     def perform_create(self, serializer):
@@ -56,8 +56,10 @@ class ChannelCreateView(generics.CreateAPIView):
 
 class ChannelMembersView(generics.RetrieveAPIView):
     def get_queryset(self):
-        queryset = m.ChannelMembers.objects.all()
-    serializer_class = Chat.ChannelMembersSerializer
+        print(self.kwargs['pk'])
+
+        queryset = m.ChannelMembers.objects.filter(channelId=self.kwargs['pk'])
+    serializer_class = Channel.ChannelMembersSerializer
     permission_classes = (AllowAny,)
 
 
