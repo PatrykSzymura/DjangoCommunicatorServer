@@ -7,19 +7,15 @@ from .Messeges import MessageSerializers
 
 from chat import models as m
 
-class ChannelSerializer(serializers.ModelSerializer):
+class BriefChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.Channel
         fields = ['id', 'name']
 
-class ChannelDetailSerializer(serializers.ModelSerializer):
-    messages = MessageSerializers(many=True, read_only=True)
-    users    = ChatUserSerializer(many=True, read_only=True)
+class DetailChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.Channel
-        fields = ['id','name']
+        fields = ['id','name','description']
+        extra_kwargs = {'description': {'required': False},'id': {'read_only': True}}
 
-class ChannelMembersSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = m.ChannelMembers
-        fields = '__all__'
+

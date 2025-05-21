@@ -24,10 +24,9 @@ class GetMembersList(generics.ListAPIView):
 class GetMyChannel(generics.ListAPIView):
     def get_queryset(self):
         c = m.ChannelMembers.objects.filter(userId=self.request.user.id)
-        print(c.values())
         return c
     serializer_class = Serializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
 class AddMember(generics.CreateAPIView):
     queryset = m.ChannelMembers.objects.all()
@@ -40,7 +39,7 @@ class AddMember(generics.CreateAPIView):
 class DeleteMember(generics.DestroyAPIView):
     queryset = m.ChannelMembers.objects.all()
     serializer_class = Serializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def perform_destroy(self, instance):
         if self.request.user.chatuser.authorityLevel == 3:
@@ -51,4 +50,4 @@ class DeleteMember(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
-        return Response({"detail": "Deleted successfully"}, status=status.HTTP_200_OK)
+        return Response({"detail": "Access to channel revoked successfully"}, status=status.HTTP_200_OK)
