@@ -37,31 +37,6 @@ class ListChatUsersView(generics.ListAPIView):
     permission_classes = (AllowAny,)
 
 
-# CHANNEL VIEWS
-class ChannelView(generics.ListAPIView):
-    queryset = m.Channel.objects.all()
-    serializer_class = Channel.ChannelSerializer
-    permission_classes = (AllowAny,)
-
-class ChannelCreateView(generics.CreateAPIView):
-    queryset = m.Channel.objects.all()
-    serializer_class = Channel.ChannelSerializer
-    permission_classes = (AllowAny,)
-
-    def perform_create(self, serializer):
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            print(serializer.errors)
-
-class ChannelMembersView(generics.RetrieveAPIView):
-    def get_queryset(self):
-        print(self.kwargs['pk'])
-
-        queryset = m.ChannelMembers.objects.filter(channelId=self.kwargs['pk'])
-    serializer_class = Channel.ChannelMembersSerializer
-    permission_classes = (AllowAny,)
-
 
 class MessagesView(generics.ListAPIView):
     def get_queryset(self):
