@@ -14,6 +14,7 @@ urlpatterns = [
     # USERS ENDPOINTS
     path('user/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('user/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('user/register/', UserViews.CreateUser.as_view(), name='register_user'),
 
     path('user/get/current/<int:pk>', UserViews.RestrictedGetUserData.as_view(), name='get_current_user'),
 
@@ -36,7 +37,7 @@ urlpatterns = [
     path('messages/edit/<int:pk>', v.MessagesUpdateView.as_view(), name='edit_messege'),
     #path('messages/delete/<int:pk>', v.MessagesViewSet.as_view(), name='delete_messege'),
 
-    path('test/<int:pk>', UserViews.RestrictedGetUserData.as_view()),
+    path('test/<int:pk>', UserViews.CreateUser.as_view()),
 
 ]
 urlpatterns += websocket_urlpatterns

@@ -45,6 +45,13 @@ class ChatUserSerializer(serializers.ModelSerializer):
         fields = ('user','nickname','authorityLevel')
         extra_kwargs = {"password": {"write_only": True}}
 
+class CreateChatUserSerializer(serializers.ModelSerializer):
+    user = BaseUserSerializer()
+
+    class Meta:
+        model = m.ChatUser
+        fields = ['user','nickname']
+
 class ChatUserMinimumDataSerializer(serializers.ModelSerializer):
     user = DynamicBaseUserSerializer(fields=['id','username'],read_only=True)
     class Meta:
@@ -95,3 +102,22 @@ class AdminAccessUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.ChatUser
         fields = ('user','nickname','authorityLevel')
+
+class CreateAccountSerializer(serializers.ModelSerializer):
+    nickname = serializers.CharField(max_length=30, required=False, default="")
+
+    class Meta:
+        model = User
+        fields = ['username','first_name','last_name', 'password', 'email', 'nickname']
+
+    def create(self, validated_data):
+        nickname = validated_data.pop('nickname', '')
+
+        # Tworzenie użytkownika
+        user = User.objects.create_user(**validated_data)
+
+        # Tworzenie powiązanego ChatUser z authorityLevel=0
+        ChatUser.objects.create(user=user, nickname=nickname, authorityLevel=1)
+
+        return user
+

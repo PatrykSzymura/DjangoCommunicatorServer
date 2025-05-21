@@ -5,8 +5,10 @@ from rest_framework.exceptions import PermissionDenied
 from chat.Serializers import User, Messeges, Token, Channel
 from rest_framework.response import Response
 from rest_framework import serializers
-
+from django.contrib.auth.models import User as BaseUser
 from chat import models as m
+
+
 
 class GetUserData(generics.RetrieveAPIView):
     queryset = m.ChatUser.objects.all()
@@ -18,13 +20,15 @@ class RestrictedGetUserData(generics.RetrieveAPIView):
         #print(F'{self.kwargs['pk']} {self.request.user.chatuser.id}')
         return m.ChatUser.objects.filter(id=self.kwargs['pk'])
 
-
     def get_serializer_class(self):
         if self.request.user.chatuser.authorityLevel == 3:
             return User.AdminAccessUserSerializer
         else:
             return User.ChatUserMinimumDataSerializer
 
-
-
     permission_classes = (IsAuthenticated,)
+
+class CreateUser(generics.CreateAPIView):
+    queryset = BaseUser.objects.all()
+    serializer_class = User.CreateAccountSerializer
+    permission_classes = (AllowAny,)

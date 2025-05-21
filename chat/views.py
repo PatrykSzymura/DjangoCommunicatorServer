@@ -45,3 +45,5 @@ class MessagesUpdateView(generics.UpdateAPIView):
 
     serializer_class = Messeges.MessageUpdateSerializer
     permission_classes = (AllowAny,)
+
+
