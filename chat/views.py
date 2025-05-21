@@ -21,23 +21,6 @@ def index(request):
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-class UserDataViewSet(generics.ListAPIView):
-    def get_queryset(self):
-        return m.User.objects.filter(id=self.kwargs['pk'])
-
-    serializer_class = User.UserSerializer
-    permission_classes = [AllowAny]
-
-class CreateChatView(generics.CreateAPIView):
-    queryset = m.ChatUser.objects.all()
-
-class ListChatUsersView(generics.ListAPIView):
-    queryset = m.ChatUser.objects.all()
-    serializer_class = User.UserSerializer
-    permission_classes = (AllowAny,)
-
-
-
 class MessagesView(generics.ListAPIView):
     def get_queryset(self):
         return m.Messages.objects.filter(channelId=self.kwargs['pk'])

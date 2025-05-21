@@ -3,8 +3,10 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from chat import models as m
+from chat.models import ChatUser
 
-class UserSerializer(serializers.ModelSerializer):
+
+class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.User
         fields = ('id', 'username','password', 'first_name', 'last_name', 'email')
@@ -20,16 +22,31 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         return super().update(instance, validated_data)
 
+class DynamicBaseUserSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        fields = kwargs.pop('fields', None)
+        super().__init__(*args, **kwargs)
+
+        if fields is not None:
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+    class Meta:
+        model = User
+        fields = '__all__'
+        extra_kwargs = {'password': {'write_only': True}}
+
 class ChatUserSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = BaseUserSerializer(read_only=True)
 
     class Meta:
         model = m.ChatUser
-        fields = '__all__'
+        fields = ('user','nickname','authorityLevel')
         extra_kwargs = {"password": {"write_only": True}}
 
 class ChatUserMinimumDataSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = DynamicBaseUserSerializer(fields=['id','username'],read_only=True)
     class Meta:
         model = m.ChatUser
         fields = ('user','nickname')
@@ -55,7 +72,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         fields = ('old_password','new_password_1', 'new_password_2')
 
     def validate(self, attrs):
-        if attrs['new_password_1'] != attrs['new_password_1']:
+        if attrs['new_password_1'] != attrs['new_password_2']:
             raise serializers.ValidationError("Passwords don't match")
         return attrs
 
@@ -71,3 +88,10 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         print(validated_data)
         return instance
 
+#TEST FIELD
+
+class AdminAccessUserSerializer(serializers.ModelSerializer):
+    user = DynamicBaseUserSerializer(fields=['id','username','last_name', 'email', 'first_name'],read_only=True)
+    class Meta:
+        model = m.ChatUser
+        fields = ('user','nickname','authorityLevel')
