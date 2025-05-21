@@ -15,6 +15,8 @@ urlpatterns = [
     path('user/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('user/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
+    path('user/get/current/<int:pk>', UserViews.RestrictedGetUserData.as_view(), name='get_current_user'),
+
     # CHAT-CHANNELS ENDPOINTS
     path('channel/create/new/', Channel.AddNew.as_view(), name='create_chat_channel'),
     path('channel/get/list/brief', Channel.AllBrief.as_view() , name='get_chat_channels'),
