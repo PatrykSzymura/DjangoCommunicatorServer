@@ -6,10 +6,11 @@ from django.template.loader import render_to_string
 
 # Create your views here.
 from django.http import HttpResponse
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from chat import models as m
 
 from chat.Serializers.ChannelMembers import Serializer
@@ -42,4 +43,12 @@ class DeleteMember(generics.DestroyAPIView):
     permission_classes = (AllowAny,)
 
     def perform_destroy(self, instance):
-        print(self.request.user.id)
+        if self.request.user.chatuser.authorityLevel == 3:
+            instance.delete()
+        else:
+            raise PermissionDenied
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({"detail": "Deleted successfully"}, status=status.HTTP_200_OK)
