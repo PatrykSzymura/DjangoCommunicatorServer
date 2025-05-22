@@ -42,14 +42,14 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
-    users = set()  # globalna lista nicków
+    users = set()
 
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_name']
         self.group_name = f"voice_{self.channel_id}"
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
-        self.nickname = None  # ustawione po JOIN
+        self.nickname = None
 
     async def disconnect(self, close_code):
         if self.nickname:
@@ -58,12 +58,21 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
-    async def receive(self, text_data):
-        if text_data.startswith("JOIN|"):
+    async def receive(self, text_data=None, bytes_data=None):
+        if text_data and text_data.startswith("JOIN|"):
             _, nick, _ = text_data.split("|", 2)
             self.nickname = nick
             self.__class__.users.add(nick)
             await self.broadcast_users()
+
+        elif bytes_data:
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    "type": "voice_binary",
+                    "data": bytes_data
+                }
+            )
 
     async def broadcast_users(self):
         msg = "USERS|" + "|".join(sorted(self.__class__.users))
@@ -77,3 +86,6 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
 
     async def voice_message(self, event):
         await self.send(text_data=event["message"])
+
+    async def voice_binary(self, event):
+        await self.send(bytes_data=event["data"])
