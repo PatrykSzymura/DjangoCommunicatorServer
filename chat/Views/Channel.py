@@ -12,6 +12,16 @@ class AllBrief(generics.ListAPIView):
     serializer_class = Channel.BriefChannelSerializer
     permission_classes = (AllowAny,)
 
+    def get_queryset(self):
+        chat_user = self.request.user.chatuser
+        try:
+            print(f"{m.ChannelMembers.objects.filter(user=chat_user)}")
+            if chat_user.authorityLevel == 3:
+               return m.Channel.objects.all()
+            return m.Channel.objects.filter(channelmembers__user=chat_user).distinct()
+        except:
+            raise PermissionDenied
+
 class AllDetail(generics.ListAPIView):
     queryset = m.Channel.objects.all()
     serializer_class = Channel.DetailChannelSerializer

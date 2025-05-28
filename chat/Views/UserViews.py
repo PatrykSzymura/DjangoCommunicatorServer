@@ -49,6 +49,6 @@ class UserList(generics.ListAPIView):
                 raise PermissionDenied
         except:
             raise PermissionDenied
-        
+
     permission_classes = (AllowAny,)
 

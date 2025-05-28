@@ -43,6 +43,8 @@ class ChannelMembers(models.Model):
 
     def __str__(self):
         return str(self.user) + " has access to " +str(self.channel)
+    class Meta:
+        verbose_name_plural = "Channel Members"
 
 class Messages(models.Model):
     id = models.AutoField(primary_key=True)
