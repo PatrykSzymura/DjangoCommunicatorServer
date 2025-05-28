@@ -21,13 +21,13 @@ from chat.models import ChatUser, Channel, ChannelMembers
 
 class GetMembersList(generics.ListAPIView):
     def get_queryset(self):
-        return m.ChannelMembers.objects.filter(channelId=self.kwargs['pk'])
+        return m.ChannelMembers.objects.filter(channel=self.kwargs['pk'])
     serializer_class = Serializer
     permission_classes = (AllowAny,)
 
 class GetMyChannel(generics.ListAPIView):
     def get_queryset(self):
-        c = m.ChannelMembers.objects.filter(userId=self.request.user.id)
+        c = m.ChannelMembers.objects.filter(user=self.request.user.id)
         return c
     serializer_class = Serializer
     permission_classes = (IsAuthenticated,)

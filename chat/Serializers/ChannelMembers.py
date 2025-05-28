@@ -8,11 +8,11 @@ from chat.models import ChatUser
 
 
 class Serializer(serializers.Serializer):
-    userId = NicknameSerializer()
-    channelId = BriefChannelSerializer()
+    user = NicknameSerializer()
+    channel = BriefChannelSerializer()
     class Meta:
         model = m.ChannelMembers
-        fields = ['channelId', 'userId']
+        fields = ['channel', 'user']
 
     def create(self, validated_data):
         return m.ChannelMembers.objects.create(**validated_data)
