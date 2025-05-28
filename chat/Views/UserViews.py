@@ -1,5 +1,5 @@
 # Create your views here.
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
 from chat.Serializers import User, Messeges, Token, Channel
@@ -37,7 +37,26 @@ class CreateUser(generics.CreateAPIView):
 class UpdateUser(generics.UpdateAPIView):
     queryset = BaseUser.objects.all()
     serializer_class = User.UpdateAccountData
+    permission_classes = (AllowAny,)
 
+class DeleteUser(generics.DestroyAPIView):
+
+    def get_queryset(self):
+        return m.User.objects.all()
+
+    serializer_class = User.BaseUserSerializer
+    permission_classes = (AllowAny,)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            if request.user.chatuser.authorityLevel == 3:
+                instance = self.get_object()
+                instance.delete()
+                return Response(status=status.HTTP_200_OK)
+            else:
+                raise PermissionDenied
+        except:
+            return PermissionDenied()
 
 class UserList(generics.ListAPIView):
     queryset = m.ChatUser.objects.all()

@@ -15,6 +15,7 @@ urlpatterns = [
     path('user/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('user/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('user/register/', UserViews.CreateUser.as_view(), name='register_user'),
+    path('user/delete/<int:pk>', UserViews.DeleteUser.as_view(), name='update_user'),
 
     path('user/get/current/<int:pk>', UserViews.RestrictedGetUserData.as_view(), name='get_current_user'),
     path('user/get/list', UserViews.UserList.as_view(), name='get_user_list'),

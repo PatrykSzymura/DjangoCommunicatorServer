@@ -28,9 +28,9 @@ class MessagesView(generics.ListAPIView):
     permission_classes = (AllowAny,)
 
 class MessagesCreateView(generics.CreateAPIView):
-    queryset = m.Messages.objects.all()
     serializer_class = Messeges.CreateSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
+
     def perform_create(self, serializer):
 
         author = serializer.validated_data
