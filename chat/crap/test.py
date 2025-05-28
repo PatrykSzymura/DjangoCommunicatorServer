@@ -5,7 +5,7 @@ import requests
 API_BASE_URL = "http://localhost:8000"
 
 # Endpoint path
-GET_CHAT_USERS_ENDPOINT = "/api/user/get/current/1"
+GET_CHAT_USERS_ENDPOINT = "/api/channel/members/delete/2/"
 
 # Access token (zwykle uzyskiwane podczas logowania)
 REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0NzkwNzc4NCwiaWF0IjoxNzQ3ODIxMzg0LCJqdGkiOiJiYzg2YmJiYWQxZDc0NmQ2YTY0YTAzYmM5YTI0MTc4MCIsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoiYWRtaW4iLCJmaXJzdF9uYW1lIjoiIiwibGFzdF9uYW1lIjoiIiwiYXV0aG9yaXR5IjozfQ.x_M2nlrdyqp6Buah4HtEoCr4yneSD5j-bYMsIvi1AqE"
