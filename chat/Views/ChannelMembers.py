@@ -60,4 +60,9 @@ class DeleteMember(generics.RetrieveDestroyAPIView):
 
         return channel_member
 
+    def destroy(self, request, *args, **kwargs):
+        channel_member = self.get_object()
+        channel_member.delete()
+        return Response(status=status.HTTP_200_OK)
+
 
