@@ -121,3 +121,23 @@ class CreateAccountSerializer(serializers.ModelSerializer):
 
         return user
 
+class UpdateAccountData(serializers.ModelSerializer):
+    nickname = serializers.CharField(source='chatuser.nickname', required=False)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'nickname']
+
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+
+        # Aktualizacja ChatUser
+        chatuser_data = validated_data.get('chatuser', {})
+        if chatuser_data:
+            chatuser = instance.chatuser
+            chatuser.nickname = chatuser_data.get('nickname', chatuser.nickname)
+            chatuser.save()
+
+        return instance

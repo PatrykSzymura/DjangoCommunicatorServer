@@ -1,28 +1,22 @@
-# code for triggering notifications
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-
-
-def send_user_notification(user_id, message):
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        f"user_{user_id}",
-        {
-            "type": "send_notification",
-            "message": message,
-        },
-    )
-
 import requests
+
 
 # Base URL of the API
 API_BASE_URL = "http://localhost:8000"
 
 # Endpoint path
-GET_CHAT_USERS_ENDPOINT = "/api/channel/members/get/"
+GET_CHAT_USERS_ENDPOINT = "/api/user/get/current/1"
 
 # Access token (zwykle uzyskiwane podczas logowania)
-ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3Nzg2MTcwLCJpYXQiOjE3NDc3ODU4NzAsImp0aSI6IjIwMjA3NmI3M2E1ZDQwODE5MTk4YjhkNGE5NjM4NWFlIiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsImZpcnN0X25hbWUiOiIiLCJsYXN0X25hbWUiOiIiLCJhdXRob3JpdHkiOjN9.RD-9-BBGb4E34lWaq48tRZx4MQynhAsBgpfNl9LkgN0"
+REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0NzkwNzc4NCwiaWF0IjoxNzQ3ODIxMzg0LCJqdGkiOiJiYzg2YmJiYWQxZDc0NmQ2YTY0YTAzYmM5YTI0MTc4MCIsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoiYWRtaW4iLCJmaXJzdF9uYW1lIjoiIiwibGFzdF9uYW1lIjoiIiwiYXV0aG9yaXR5IjozfQ.x_M2nlrdyqp6Buah4HtEoCr4yneSD5j-bYMsIvi1AqE"
+REFRESH_TOKEN_Janek = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0NzkwOTM3NCwiaWF0IjoxNzQ3ODIyOTc0LCJqdGkiOiJlODAzZmMwNmNmYzg0MDFmOGI4N2I5MWRjMDdmZjhhYyIsInVzZXJfaWQiOjMsInVzZXJuYW1lIjoiamFuZWsiLCJmaXJzdF9uYW1lIjoiIiwibGFzdF9uYW1lIjoiIiwiYXV0aG9yaXR5IjoxfQ.mVNVbhzIPWKJrmpGvwQogS-RhtTjl87pTWPoH0nkXAk"
+
+def get_new_access_token(refresh_token):
+    Endpoint = "http://localhost:8000/api/user/refresh/"
+    r = requests.post(Endpoint, data={"refresh": refresh_token})
+    return r.json()["access"]
+
+ACCESS_TOKEN = get_new_access_token(REFRESH_TOKEN_Janek)
 
 # Full URL
 url = f"{API_BASE_URL}{GET_CHAT_USERS_ENDPOINT}"

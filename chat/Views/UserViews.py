@@ -32,3 +32,7 @@ class CreateUser(generics.CreateAPIView):
     queryset = BaseUser.objects.all()
     serializer_class = User.CreateAccountSerializer
     permission_classes = (AllowAny,)
+
+class UpdateUser(generics.UpdateAPIView):
+    queryset = BaseUser.objects.all()
+    serializer_class = User.UpdateAccountData

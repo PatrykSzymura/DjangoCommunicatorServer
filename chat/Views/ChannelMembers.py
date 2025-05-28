@@ -9,11 +9,15 @@ from django.http import HttpResponse
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from chat import models as m
 
-from chat.Serializers.ChannelMembers import Serializer
+from chat.Serializers.ChannelMembers import Serializer, AddMemberSerializer
+from chat.models import ChatUser, Channel, ChannelMembers
+
 
 class GetMembersList(generics.ListAPIView):
     def get_queryset(self):
@@ -28,13 +32,19 @@ class GetMyChannel(generics.ListAPIView):
     serializer_class = Serializer
     permission_classes = (IsAuthenticated,)
 
+
 class AddMember(generics.CreateAPIView):
-    queryset = m.ChannelMembers.objects.all()
-    serializer_class = Serializer
+    queryset = ChannelMembers.objects.all()
+    serializer_class = AddMemberSerializer
     permission_classes = (AllowAny,)
+
     def perform_create(self, serializer):
         if serializer.is_valid():
             serializer.save()
+        else:
+            print(serializer.errors)
+
+
 
 class DeleteMember(generics.DestroyAPIView):
     queryset = m.ChannelMembers.objects.all()

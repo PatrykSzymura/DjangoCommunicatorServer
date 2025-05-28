@@ -38,11 +38,11 @@ class Channel(models.Model):
 
 class ChannelMembers(models.Model):
     id = models.AutoField(primary_key=True)
-    channelId = models.ForeignKey(Channel,on_delete=models.CASCADE)
-    userId = models.ForeignKey(ChatUser,on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel,on_delete=models.CASCADE)
+    user = models.ForeignKey(ChatUser,on_delete=models.CASCADE)
 
     def __str__(self):
-        return str(self.userId) + " has access to " +str(self.channelId)
+        return str(self.user) + " has access to " +str(self.channel)
 
 class Messages(models.Model):
     id = models.AutoField(primary_key=True)
