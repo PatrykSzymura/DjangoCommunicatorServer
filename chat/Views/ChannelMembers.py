@@ -1,15 +1,10 @@
-from django.contrib.messages.context_processors import messages
-from django.contrib.messages.storage.cookie import MessageSerializer
-from django.db.models import QuerySet
-from django.shortcuts import render
-from django.template.loader import render_to_string
-
 # Create your views here.
 from django.http import HttpResponse
+from django.utils.http import escape_leading_slashes
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -49,13 +44,28 @@ class AddMember(generics.CreateAPIView):
 class DeleteMember(generics.DestroyAPIView):
     queryset = m.ChannelMembers.objects.all()
     serializer_class = Serializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
     def perform_destroy(self, instance):
-        if self.request.user.chatuser.authorityLevel == 3:
-            instance.delete()
-        else:
+        user =  self.request.user.chatuser.authorityLevel
+        try:
+            if user == 3:
+                instance.delete()
             raise PermissionDenied
+        except:
+            raise PermissionDenied
+
+    def get_object(self):
+        user_id = self.request.data.get('user')
+        channel_id = self.request.data.get('channel')
+
+        if not user_id or not channel_id:
+            raise ValidationError("Both 'user' and 'channel' must be provided.")
+
+        try:
+            return ChannelMembers.objects.get(user__id=user_id, channel__id=channel_id)
+        except ChannelMembers.DoesNotExist:
+            raise ValidationError("This user is not a member of the specified channel.")
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
