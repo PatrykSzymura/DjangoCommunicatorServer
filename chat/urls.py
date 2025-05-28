@@ -17,6 +17,7 @@ urlpatterns = [
     path('user/register/', UserViews.CreateUser.as_view(), name='register_user'),
 
     path('user/get/current/<int:pk>', UserViews.RestrictedGetUserData.as_view(), name='get_current_user'),
+    path('user/get/list', UserViews.UserList.as_view(), name='get_user_list'),
 
     # CHAT-CHANNELS ENDPOINTS
     path('channel/create/new/', Channel.AddNew.as_view(), name='create_chat_channel'),

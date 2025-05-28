@@ -18,7 +18,8 @@ class GetUserData(generics.RetrieveAPIView):
 class RestrictedGetUserData(generics.RetrieveAPIView):
     def get_queryset(self):
         #print(F'{self.kwargs['pk']} {self.request.user.chatuser.id}')
-        return m.ChatUser.objects.filter(id=self.kwargs['pk'])
+        #return m.ChatUser.objects.filter(id=self.kwargs['pk'])
+        return m.ChatUser.objects.all()
 
     def get_serializer_class(self):
         if self.request.user.chatuser.authorityLevel == 3:
@@ -36,3 +37,18 @@ class CreateUser(generics.CreateAPIView):
 class UpdateUser(generics.UpdateAPIView):
     queryset = BaseUser.objects.all()
     serializer_class = User.UpdateAccountData
+
+
+class UserList(generics.ListAPIView):
+    queryset = m.ChatUser.objects.all()
+    def get_serializer_class(self):
+        try:
+            if self.request.user.chatuser.authorityLevel == 3:
+                return User.AdminAccessUserSerializer
+            else:
+                raise PermissionDenied
+        except:
+            raise PermissionDenied
+        
+    permission_classes = (AllowAny,)
+
