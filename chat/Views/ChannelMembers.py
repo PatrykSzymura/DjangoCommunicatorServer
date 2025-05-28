@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from chat import models as m
 
-from chat.Serializers.ChannelMembers import Serializer, AddMemberSerializer
+from chat.Serializers.ChannelMembers import Serializer, AddMemberSerializer, RemoveMemberSerializer
 from chat.models import ChatUser, Channel, ChannelMembers
 
 
@@ -39,35 +39,25 @@ class AddMember(generics.CreateAPIView):
         else:
             print(serializer.errors)
 
-
-
-class DeleteMember(generics.DestroyAPIView):
-    queryset = m.ChannelMembers.objects.all()
-    serializer_class = Serializer
+class DeleteMember(generics.RetrieveDestroyAPIView):
+    serializer_class = RemoveMemberSerializer
     permission_classes = (AllowAny,)
 
-    def perform_destroy(self, instance):
-        user =  self.request.user.chatuser.authorityLevel
-        try:
-            if user == 3:
-                instance.delete()
-            raise PermissionDenied
-        except:
-            raise PermissionDenied
-
     def get_object(self):
-        user_id = self.request.data.get('user')
-        channel_id = self.request.data.get('channel')
+        user_id = self.request.query_params.get('user_id')
+        channel_id = self.request.query_params.get('channel_id')
 
         if not user_id or not channel_id:
-            raise ValidationError("Both 'user' and 'channel' must be provided.")
+            raise NotFound("Both 'user_id' and 'channel_id' must be provided.")
 
         try:
-            return ChannelMembers.objects.get(user__id=user_id, channel__id=channel_id)
+            chat_user = ChatUser.objects.get(user__id=user_id)
+            channel_member = ChannelMembers.objects.get(user=chat_user, channel__id=channel_id)
+        except ChatUser.DoesNotExist:
+            raise NotFound("ChatUser with the given user_id does not exist.")
         except ChannelMembers.DoesNotExist:
-            raise ValidationError("This user is not a member of the specified channel.")
+            raise NotFound("ChannelMember with the given user_id and channel_id does not exist.")
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response({"detail": "Access to channel revoked successfully"}, status=status.HTTP_200_OK)
+        return channel_member
+
+
