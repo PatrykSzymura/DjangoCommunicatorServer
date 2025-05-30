@@ -77,14 +77,20 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             await self.broadcast_users()
 
         elif bytes_data:
-            await self.channel_layer.group_send(
-                self.group_name,
-                {
-                    "type": "voice_binary",
-                    "data": bytes_data,
-                    "sender": self.channel_name
-                }
-            )
+            if bytes_data.startswith(b"AUDIO|"):
+                try:
+                    prefix, nick, audio = bytes_data.split(b"|", 2)
+                    await self.channel_layer.group_send(
+                        self.group_name,
+                        {
+                            "type": "voice_binary",
+                            "data": audio,
+                            "sender_nick": nick.decode("utf-8")
+                        }
+                    )
+                except Exception as e:
+                    print("Błąd dekodowania AUDIO:", e)
+
 
     async def broadcast_users(self):
         users = self.__class__.channels_users.get(self.channel_id, set())
@@ -104,8 +110,8 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             print(f"[WS] Błąd wysyłania wiadomości: {e}")
 
     async def voice_binary(self, event):
-        if event.get("sender") == self.channel_name:
-            return  # nie wysyłaj danych do siebie
+        if self.nickname == event.get("sender_nick"):
+            return
         try:
             await self.send(bytes_data=event["data"])
         except Exception as e:
