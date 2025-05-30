@@ -111,6 +111,9 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         if event.get("sender_nick") == self.nickname:
             return  # nie wysyłaj swojego dźwięku do siebie
         try:
-            await self.send(bytes_data=event["data"])
+            nick = event.get("sender_nick", "")
+            packet = b"AUDIO|" + nick.encode("utf-8") + b"|" + event["data"]
+            await self.send(bytes_data=packet)
         except Exception as e:
             print("[WS] Błąd audio:", e)
+
