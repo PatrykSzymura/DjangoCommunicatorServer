@@ -56,6 +56,8 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         if self.channel_id not in self.__class__.channels_users:
             self.__class__.channels_users[self.channel_id] = set()
 
+        await self.broadcast_users()
+
     async def disconnect(self, close_code):
         if self.nickname:
             self.__class__.channels_users[self.channel_id].discard(self.nickname)
