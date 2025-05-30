@@ -113,12 +113,12 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
 
     async def voice_binary(self, event):
         try:
+            if not self.nickname:
+                return  # Nie znam jeszcze własnego nicku — ignoruję
             sender_nick = event.get("sender_nick", "").strip().lower()
-            if self.nickname and self.nickname.strip().lower() == sender_nick:
-                return  # nie wysyłaj swojego audio do siebie
+            if self.nickname.strip().lower() == sender_nick:
+                return  # Nie wysyłaj audio do siebie
             packet = b"AUDIO|" + sender_nick.encode("utf-8") + b"|" + event["data"]
             await self.send(bytes_data=packet)
         except Exception as e:
             print("[WS] Błąd audio:", e)
-
-
