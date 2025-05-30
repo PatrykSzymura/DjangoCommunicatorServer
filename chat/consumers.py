@@ -64,8 +64,12 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         if text_data and text_data.startswith("JOIN|"):
-            _, nick, _ = text_data.split("|", 2)
-            self.nickname = nick
+            try:
+                _, nick, _ = text_data.strip().split("|", 2)
+                self.nickname = nick.strip().lower()
+            except Exception as e:
+                print("[WS] Błąd JOIN:", e)
+                return
 
             if self.channel_id not in self.__class__.channels_users:
                 self.__class__.channels_users[self.channel_id] = set()
@@ -108,12 +112,13 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             print("[WS] Błąd wiadomości:", e)
 
     async def voice_binary(self, event):
-        if event.get("sender_nick") == self.nickname:
-            return  # nie wysyłaj swojego dźwięku do siebie
         try:
-            nick = event.get("sender_nick", "")
-            packet = b"AUDIO|" + nick.encode("utf-8") + b"|" + event["data"]
+            sender_nick = event.get("sender_nick", "").strip().lower()
+            if self.nickname and self.nickname.strip().lower() == sender_nick:
+                return  # nie wysyłaj swojego audio do siebie
+            packet = b"AUDIO|" + sender_nick.encode("utf-8") + b"|" + event["data"]
             await self.send(bytes_data=packet)
         except Exception as e:
             print("[WS] Błąd audio:", e)
+
 
