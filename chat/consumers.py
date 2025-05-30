@@ -52,9 +52,13 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         await self.accept()
         self.nickname = None
 
+        # Upewnij się, że kanał istnieje w słowniku
+        if self.channel_id not in self.__class__.channels_users:
+            self.__class__.channels_users[self.channel_id] = set()
+
     async def disconnect(self, close_code):
-        if self.nickname and self.nickname in self.__class__.active_users:
-            del self.__class__.active_users[self.nickname]
+        if self.nickname:
+            self.__class__.channels_users[self.channel_id].discard(self.nickname)
             await self.broadcast_users()
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
@@ -62,7 +66,12 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         if text_data and text_data.startswith("JOIN|"):
             _, nick, _ = text_data.split("|", 2)
             self.nickname = nick
-            self.__class__.active_users[nick] = True
+
+            # Upewnij się, że kanał istnieje
+            if self.channel_id not in self.__class__.channels_users:
+                self.__class__.channels_users[self.channel_id] = set()
+
+            self.__class__.channels_users[self.channel_id].add(nick)
             await self.broadcast_users()
 
         elif bytes_data:
@@ -75,7 +84,8 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             )
 
     async def broadcast_users(self):
-        msg = "USERS|" + "|".join(sorted(self.__class__.active_users.keys()))
+        users = self.__class__.channels_users.get(self.channel_id, set())
+        msg = "USERS|" + "|".join(sorted(users))
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -85,7 +95,13 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         )
 
     async def voice_message(self, event):
-        await self.send(text_data=event["message"])
+        try:
+            await self.send(text_data=event["message"])
+        except Exception as e:
+            print(f"[WS] Błąd wysyłania wiadomości: {e}")
 
     async def voice_binary(self, event):
-        await self.send(bytes_data=event["data"])
+        try:
+            await self.send(bytes_data=event["data"])
+        except Exception as e:
+            print(f"[WS] Błąd audio: {e}")
