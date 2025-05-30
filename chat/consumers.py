@@ -1,4 +1,5 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
+from asyncio import sleep
 import json
 
 
@@ -42,7 +43,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
-    users = set()
+    active_users = {}  # nick -> timestamp (lub po prostu set jak wcześniej)
 
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_name']
@@ -52,17 +53,16 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         self.nickname = None
 
     async def disconnect(self, close_code):
-        if self.nickname:
-            self.__class__.users.discard(self.nickname)
+        if self.nickname and self.nickname in self.__class__.active_users:
+            del self.__class__.active_users[self.nickname]
             await self.broadcast_users()
-
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
         if text_data and text_data.startswith("JOIN|"):
             _, nick, _ = text_data.split("|", 2)
             self.nickname = nick
-            self.__class__.users.add(nick)
+            self.__class__.active_users[nick] = True
             await self.broadcast_users()
 
         elif bytes_data:
@@ -75,7 +75,7 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             )
 
     async def broadcast_users(self):
-        msg = "USERS|" + "|".join(sorted(self.__class__.users))
+        msg = "USERS|" + "|".join(sorted(self.__class__.active_users.keys()))
         await self.channel_layer.group_send(
             self.group_name,
             {
