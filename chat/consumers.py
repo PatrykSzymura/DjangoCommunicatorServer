@@ -43,7 +43,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
-    active_users = {}  # nick -> timestamp (lub po prostu set jak wcześniej)
+    channels_users = {}  # channel_id -> set of nicknames
 
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_name']
