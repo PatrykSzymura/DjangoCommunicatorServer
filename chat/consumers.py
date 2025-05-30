@@ -82,6 +82,7 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "voice_binary",
                     "data": bytes_data
+                    "sender": self.channel_name
                 }
             )
 
@@ -103,6 +104,8 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             print(f"[WS] Błąd wysyłania wiadomości: {e}")
 
     async def voice_binary(self, event):
+        if event.get("sender") == self.channel_name:
+            return  # nie wysyłaj danych do siebie
         try:
             await self.send(bytes_data=event["data"])
         except Exception as e:
