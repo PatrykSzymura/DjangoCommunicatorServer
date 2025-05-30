@@ -81,7 +81,7 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
                 self.group_name,
                 {
                     "type": "voice_binary",
-                    "data": bytes_data
+                    "data": bytes_data,
                     "sender": self.channel_name
                 }
             )
