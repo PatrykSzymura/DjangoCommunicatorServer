@@ -47,3 +47,26 @@ class MessagesUpdateView(generics.UpdateAPIView):
     permission_classes = (AllowAny,)
 
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+# tymczasowe (RAM) przechowywanie zaproszeń
+INVITES = []
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def invite_to_game(request):
+    from_user = request.data['from']
+    to_user = request.data['to']
+    game = request.data['game']
+    INVITES.append({"from": from_user, "to": to_user, "game": game})
+    return Response({"status": "sent"})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_invites(request, user_id):
+    user_invites = [i for i in INVITES if str(i['to']) == str(user_id)]
+    for inv in user_invites:
+        INVITES.remove(inv)
+    return Response(user_invites)
