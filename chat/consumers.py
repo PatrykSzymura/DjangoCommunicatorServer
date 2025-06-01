@@ -66,12 +66,14 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         if typ == "join":
             self.nickname = data.get("nickname")
             self.channels_users.setdefault(self.channel_id, set()).add(self.nickname)
-            await self.send_user_list()
-            # Bezpośrednio wyślij do nowego klienta też:
-            await self.send(text_data=json.dumps({
-                "type": "users",
-                "usernames": list(self.channels_users[self.channel_id])
-            }))
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    "type": "users.update",
+                    "usernames": list(self.channels_users[self.channel_id])
+                }
+            )
+
 
         elif typ in {"offer", "answer", "ice"}:
             await self.channel_layer.group_send(
