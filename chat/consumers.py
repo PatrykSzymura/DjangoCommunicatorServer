@@ -75,15 +75,27 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             )
 
 
-        elif typ in {"offer", "answer", "ice"}:
-            await self.channel_layer.group_send(
-                self.group_name,
-                {
-                    "type": "signal",
-                    "data": data,
-                    "sender": self.channel_name
-                }
-            )
+        elif typ == "offer":
+            sdp_offer = {
+                "sdp": data.get("sdp"),
+                "type": data.get("type_sdp")
+            }
+            answer = await handle_offer(sdp_offer)
+            await self.send(text_data=json.dumps({
+                "type": "answer",
+                "sdp": answer["sdp"],
+                "type_sdp": answer["type"]
+            }))
+
+        elif typ == "ice":
+            candidate = data.get("candidate")
+            pc = pcs_map.get(self.channel_name)
+            if pc:
+                from aiortc import candidate_from_sdp
+                ice_candidate = candidate_from_sdp(candidate["candidate"])
+                ice_candidate.sdpMid = candidate["sdpMid"]
+                ice_candidate.sdpMLineIndex = candidate["sdpMLineIndex"]
+                await pc.addIceCandidate(ice_candidate)
 
         elif typ == "mute":
             await self.channel_layer.group_send(
@@ -123,5 +135,31 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             "muted": event["muted"]
         }))
 
+pcs_map = {}  # globalny słownik
 
+async def handle_offer(sdp_offer, channel_name):
+    from aiortc import RTCPeerConnection, RTCSessionDescription
+    from aiortc.contrib.media import MediaBlackhole
 
+    pc = RTCPeerConnection()
+    pcs_map[channel_name] = pc
+    pc.addTransceiver('audio', direction='recvonly')
+
+    @pc.on("track")
+    async def on_track(track):
+        print(f"[aiortc] Otrzymano strumień: {track.kind}")
+        blackhole = MediaBlackhole()
+        await blackhole.start()
+        while True:
+            frame = await track.recv()
+            # Możesz tu nagrywać lub analizować dźwięk
+            ...
+
+    offer = RTCSessionDescription(sdp=sdp_offer['sdp'], type=sdp_offer['type'])
+    await pc.setRemoteDescription(offer)
+    answer = await pc.createAnswer()
+    await pc.setLocalDescription(answer)
+    return {
+        'sdp': pc.localDescription.sdp,
+        'type': pc.localDescription.type
+    }
