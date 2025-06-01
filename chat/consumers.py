@@ -1,4 +1,5 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
+from urllib.parse import parse_qs
 import json
 
 
@@ -47,10 +48,23 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_name']
         self.group_name = f"voice_{self.channel_id}"
+    
+        # ← odczytaj nickname z query string
+        query = parse_qs(self.scope["query_string"].decode())
+        self.nickname = query.get("nickname", ["Anonim"])[0]
+    
         await self.accept()
         await self.channel_layer.group_add(self.group_name, self.channel_name)
-        self.nickname = None
-        self.channels_users.setdefault(self.channel_id, set())  # ← DODAJ TO
+        self.channels_users.setdefault(self.channel_id, set()).add(self.nickname)
+
+    # Powiadom wszystkich
+    await self.channel_layer.group_send(
+        self.group_name,
+        {
+            "type": "users.update",
+            "usernames": list(self.channels_users[self.channel_id])
+        }
+    )
 
     async def disconnect(self, close_code):
         if self.nickname:
