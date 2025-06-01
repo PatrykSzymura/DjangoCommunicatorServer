@@ -75,6 +75,18 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
                     "sender": self.channel_name
                 }
             )
+            
+       elif typ == "mute":
+           await self.channel_layer.group_send(
+               self.group_name,
+               {
+                   "type": "broadcast_mute",
+                    "nickname": data.get("nickname"),
+                    "muted": data.get("muted")
+                }
+            )
+
+
 
     async def signal(self, event):
         if self.channel_name != event["sender"]:
@@ -96,4 +108,10 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             "type": "users",
             "usernames": event["usernames"]
         }))
-
+        
+    async def broadcast_mute(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "mute",
+            "nickname": event["nickname"],
+            "muted": event["muted"]
+        }))
