@@ -42,6 +42,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
+    channels_users = {}  # kanał: set(nicków)
+
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_name']
         self.group_name = f"voice_{self.channel_id}"
@@ -50,6 +52,9 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         self.nickname = None
 
     async def disconnect(self, close_code):
+        if self.nickname:
+            VoiceChannelConsumer.channels_users[self.channel_id].discard(self.nickname)
+            await self.send_user_list()
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
@@ -58,36 +63,37 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
 
         if typ == "join":
             self.nickname = data.get("nickname")
-            await self.send_users_list()
+            VoiceChannelConsumer.channels_users.setdefault(self.channel_id, set()).add(self.nickname)
+            await self.send_user_list()
+
         elif typ in {"offer", "answer", "ice"}:
-            # Przekaż do innych użytkowników w tym kanale
             await self.channel_layer.group_send(
                 self.group_name,
                 {
-                    "type": "webrtc.signal",
-                    "sender": self.channel_name,
-                    "data": data
+                    "type": "signal",
+                    "data": data,
+                    "sender": self.channel_name
                 }
             )
 
-    async def webrtc_signal(self, event):
+    async def signal(self, event):
         if self.channel_name != event["sender"]:
             await self.send(text_data=json.dumps(event["data"]))
 
-    async def send_users_list(self):
-        # możesz też dodać bazę danych lub pamięć do trzymania nicków
+    async def send_user_list(self):
+        user_list = list(VoiceChannelConsumer.channels_users.get(self.channel_id, []))
         await self.channel_layer.group_send(
             self.group_name,
             {
                 "type": "users.update",
-                "sender": self.channel_name,
-                "usernames": [self.nickname] if self.nickname else []
+                "usernames": user_list,
+                "sender": self.channel_name
             }
         )
 
     async def users_update(self, event):
-        if self.channel_name != event["sender"]:
-            await self.send(text_data=json.dumps({
-                "type": "users",
-                "usernames": event["usernames"]
-            }))
+        await self.send(text_data=json.dumps({
+            "type": "users",
+            "usernames": event["usernames"]
+        }))
+
