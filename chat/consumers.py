@@ -57,14 +57,14 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         self.channels_users.setdefault(self.channel_id, set()).add(self.nickname)
 
-    # Powiadom wszystkich
-    await self.channel_layer.group_send(
-        self.group_name,
-        {
-            "type": "users.update",
-            "usernames": list(self.channels_users[self.channel_id])
-        }
-    )
+        # Powiadom wszystkich
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                "type": "users.update",
+                "usernames": list(self.channels_users[self.channel_id])
+            }
+        )
 
     async def disconnect(self, close_code):
         if self.nickname:
