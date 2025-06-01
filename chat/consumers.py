@@ -108,6 +108,7 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         )
 
     async def users_update(self, event):
+        print("[SERVER] Aktualizacja użytkowników:", event["usernames"])
         await self.send(text_data=json.dumps({
             "type": "users",
             "usernames": event["usernames"]
