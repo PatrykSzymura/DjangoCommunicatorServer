@@ -47,8 +47,8 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_name']
         self.group_name = f"voice_{self.channel_id}"
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
         self.nickname = None
 
     async def disconnect(self, close_code):
