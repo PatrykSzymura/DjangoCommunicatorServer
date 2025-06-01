@@ -55,6 +55,8 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         if self.nickname:
             self.channels_users[self.channel_id].discard(self.nickname)
             await self.send_user_list()
+            if not self.channels_users[self.channel_id]:
+                del self.channels_users[self.channel_id]
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
