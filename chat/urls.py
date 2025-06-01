@@ -41,5 +41,8 @@ urlpatterns = [
 
     path('test/<int:pk>', UserViews.CreateUser.as_view()),
 
+    path('api/invite/', v.invite_to_game, name='invite_to_game'),
+    path('api/invites/for/<int:user_id>/', v.get_invites, name='get_invites_for_user'),
+
 ]
 urlpatterns += websocket_urlpatterns
