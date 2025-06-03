@@ -11,10 +11,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         self.channel_id = self.scope['url_route']['kwargs']['channel_id']
         self.group_name = f"channel_{self.channel_id}"
         user = self.scope["user"]
-
+        print(user)
         has_access = await self.user_has_channel_access(user, self.channel_id)
         if not has_access:
             await self.close()
+            print("user has no access")
             return
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
