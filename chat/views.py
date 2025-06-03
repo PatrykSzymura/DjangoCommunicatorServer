@@ -38,14 +38,15 @@ class MessagesCreateView(generics.CreateAPIView):
 
         author = serializer.validated_data
         #print(author)
-
+        channel_id = instance.channelId.id
+        messege = f'New Messege on {instance.channelId.name} sent by {instance.author.nickname}'
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "notifications",
+            f"channel_{channel_id}",
             {
                 "type": "notify",
-                "message": "New message sent",
-                "data": {"id": instance.channelId_id},
+                "message": messege,
+                "data": {"id": channel_id},
             }
         )
 
@@ -58,14 +59,14 @@ class MessagesUpdateView(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         instance = serializer.save()
+        channel_id = instance.channelId.id
 
-        # Send WebSocket notification
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "notifications",
+            f"channel_{channel_id}",
             {
                 "type": "notify",
-                "message": "Message updated",
-                "data": {"id": instance.channelId_id},
+                "message": "Message updated in your channel",
+                "data": {"message_id": instance.id}
             }
         )

@@ -2,13 +2,26 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from urllib.parse import parse_qs
 import json
 
+from channels.db import database_sync_to_async
+from django.contrib.auth.models import AnonymousUser
+from .models import Channel, ChannelMembers, ChatUser
+
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        await self.channel_layer.group_add("notifications", self.channel_name)
+        self.channel_id = self.scope['url_route']['kwargs']['channel_id']
+        self.group_name = f"channel_{self.channel_id}"
+        user = self.scope["user"]
+
+        has_access = await self.user_has_channel_access(user, self.channel_id)
+        if not has_access:
+            await self.close()
+            return
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("notifications", self.channel_name)
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def notify(self, event):
         await self.send(text_data=json.dumps({
@@ -16,6 +29,16 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             "message": event["message"],
             "data": event.get("data", {})
         }))
+
+    @database_sync_to_async
+    def user_has_channel_access(self, user, channel_id):
+        if isinstance(user, AnonymousUser):
+            return False
+        try:
+            chat_user = ChatUser.objects.get(user=user)
+        except ChatUser.DoesNotExist:
+            return False
+        return ChannelMembers.objects.filter(channel_id=channel_id, user=chat_user).exists()
 
 
 
