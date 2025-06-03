@@ -1,8 +1,5 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
-<<<<<<< HEAD
 from urllib.parse import parse_qs
-=======
->>>>>>> parent of b7c77ec (Update consumers.py)
 import json
 
 
@@ -46,178 +43,83 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
-<<<<<<< HEAD
-    channels_users = {}
-=======
-    users = set()
->>>>>>> parent of b7c77ec (Update consumers.py)
+    channels_users = {}  # channel_id -> set of nicknames
 
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_name']
         self.group_name = f"voice_{self.channel_id}"
-    
-        # ← odczytaj nickname z query string
-        query = parse_qs(self.scope["query_string"].decode())
-        self.nickname = query.get("nickname", ["Anonim"])[0]
-    
-        await self.accept()
         await self.channel_layer.group_add(self.group_name, self.channel_name)
-        self.channels_users.setdefault(self.channel_id, set()).add(self.nickname)
+        await self.accept()
+        self.nickname = None
 
-<<<<<<< HEAD
-        # Powiadom wszystkich
-=======
+        if self.channel_id not in self.__class__.channels_users:
+            self.__class__.channels_users[self.channel_id] = set()
+
+        await self.broadcast_users()
+
     async def disconnect(self, close_code):
         if self.nickname:
-            self.__class__.users.discard(self.nickname)
+            self.__class__.channels_users[self.channel_id].discard(self.nickname)
             await self.broadcast_users()
-
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
         if text_data and text_data.startswith("JOIN|"):
-            _, nick, _ = text_data.split("|", 2)
-            self.nickname = nick
-            self.__class__.users.add(nick)
+            try:
+                _, nick, _ = text_data.strip().split("|", 2)
+                self.nickname = nick.strip().lower()
+            except Exception as e:
+                print("[WS] Błąd JOIN:", e)
+                return
+
+            if self.channel_id not in self.__class__.channels_users:
+                self.__class__.channels_users[self.channel_id] = set()
+
+            self.__class__.channels_users[self.channel_id].add(nick)
             await self.broadcast_users()
 
         elif bytes_data:
-            await self.channel_layer.group_send(
-                self.group_name,
-                {
-                    "type": "voice_binary",
-                    "data": bytes_data
-                }
-            )
+            if bytes_data.startswith(b"AUDIO|"):
+                try:
+                    _, nick, audio = bytes_data.split(b"|", 2)
+                    nick = nick.decode("utf-8")
+
+                    await self.channel_layer.group_send(
+                        self.group_name,
+                        {
+                            "type": "voice_binary",
+                            "data": audio,
+                            "sender_nick": nick
+                        }
+                    )
+                except Exception as e:
+                    print("[WS] Błąd dekodowania AUDIO:", e)
 
     async def broadcast_users(self):
-        msg = "USERS|" + "|".join(sorted(self.__class__.users))
->>>>>>> parent of b7c77ec (Update consumers.py)
+        users = self.__class__.channels_users.get(self.channel_id, set())
+        msg = "USERS|" + "|".join(sorted(users))
         await self.channel_layer.group_send(
             self.group_name,
             {
-                "type": "users.update",
-                "usernames": list(self.channels_users[self.channel_id])
+                "type": "voice_message",
+                "message": msg,
             }
         )
 
-    async def disconnect(self, close_code):
-        if self.nickname:
-            self.channels_users[self.channel_id].discard(self.nickname)
-            await self.send_user_list()
-            if not self.channels_users[self.channel_id]:
-                del self.channels_users[self.channel_id]
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+    async def voice_message(self, event):
+        try:
+            await self.send(text_data=event["message"])
+        except Exception as e:
+            print("[WS] Błąd wiadomości:", e)
 
-    async def receive(self, text_data=None, bytes_data=None):
-        data = json.loads(text_data)
-        typ = data.get("type")
-
-        if typ == "join":
-            self.nickname = data.get("nickname")
-            self.channels_users.setdefault(self.channel_id, set()).add(self.nickname)
-            # Powiadom wszystkich w grupie
-            await self.channel_layer.group_send(
-                self.group_name,
-                {
-                    "type": "users.update",
-                    "usernames": list(self.channels_users[self.channel_id])
-                }
-            )
-            
-            # Powiadom nowo dołączonego użytkownika osobno (żeby zobaczył aktualną listę)
-            await self.send(text_data=json.dumps({
-                "type": "users",
-                "usernames": list(self.channels_users[self.channel_id])
-            }))
-
-
-
-        elif typ == "offer":
-            sdp_offer = {
-                "sdp": data.get("sdp"),
-                "type": data.get("type_sdp")
-            }
-            answer = await handle_offer(sdp_offer)
-            await self.send(text_data=json.dumps({
-                "type": "answer",
-                "sdp": answer["sdp"],
-                "type_sdp": answer["type"]
-            }))
-
-        elif typ == "ice":
-            candidate = data.get("candidate")
-            pc = pcs_map.get(self.channel_name)
-            if pc:
-                from aiortc import candidate_from_sdp
-                ice_candidate = candidate_from_sdp(candidate["candidate"])
-                ice_candidate.sdpMid = candidate["sdpMid"]
-                ice_candidate.sdpMLineIndex = candidate["sdpMLineIndex"]
-                await pc.addIceCandidate(ice_candidate)
-
-        elif typ == "mute":
-            await self.channel_layer.group_send(
-                self.group_name,
-                {
-                    "type": "send_mute",
-                    "nickname": data.get("nickname"),
-                    "muted": data.get("muted")
-                }
-            )
-
-    async def signal(self, event):
-        if self.channel_name != event["sender"]:
-            await self.send(text_data=json.dumps(event["data"]))
-
-    async def send_user_list(self):
-        user_list = list(self.channels_users.get(self.channel_id, []))
-        await self.channel_layer.group_send(
-            self.group_name,
-            {
-                "type": "users.update",
-                "usernames": user_list
-            }
-        )
-
-    async def users_update(self, event):
-        print("[SERVER] Aktualizacja użytkowników:", event["usernames"])
-        await self.send(text_data=json.dumps({
-            "type": "users",
-            "usernames": event["usernames"]
-        }))
-
-    async def send_mute(self, event):
-        await self.send(text_data=json.dumps({
-            "type": "mute",
-            "nickname": event["nickname"],
-            "muted": event["muted"]
-        }))
-
-pcs_map = {}  # globalny słownik
-
-async def handle_offer(sdp_offer, channel_name):
-    from aiortc import RTCPeerConnection, RTCSessionDescription
-    from aiortc.contrib.media import MediaBlackhole
-
-    pc = RTCPeerConnection()
-    pcs_map[channel_name] = pc
-    pc.addTransceiver('audio', direction='recvonly')
-
-    @pc.on("track")
-    async def on_track(track):
-        print(f"[aiortc] Otrzymano strumień: {track.kind}")
-        blackhole = MediaBlackhole()
-        await blackhole.start()
-        while True:
-            frame = await track.recv()
-            # Możesz tu nagrywać lub analizować dźwięk
-            ...
-
-    offer = RTCSessionDescription(sdp=sdp_offer['sdp'], type=sdp_offer['type'])
-    await pc.setRemoteDescription(offer)
-    answer = await pc.createAnswer()
-    await pc.setLocalDescription(answer)
-    return {
-        'sdp': pc.localDescription.sdp,
-        'type': pc.localDescription.type
-    }
+    async def voice_binary(self, event):
+        try:
+            if not self.nickname:
+                return  # Nie znam jeszcze własnego nicku — ignoruję
+            sender_nick = event.get("sender_nick", "").strip().lower()
+            if self.nickname.strip().lower() == sender_nick:
+                return  # Nie wysyłaj audio do siebie
+            packet = b"AUDIO|" + sender_nick.encode("utf-8") + b"|" + event["data"]
+            await self.send(bytes_data=packet)
+        except Exception as e:
+            print("[WS] Błąd audio:", e)
