@@ -1,5 +1,8 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
+<<<<<<< HEAD
 from urllib.parse import parse_qs
+=======
+>>>>>>> parent of b7c77ec (Update consumers.py)
 import json
 
 
@@ -43,7 +46,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
+<<<<<<< HEAD
     channels_users = {}
+=======
+    users = set()
+>>>>>>> parent of b7c77ec (Update consumers.py)
 
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_name']
@@ -57,7 +64,35 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         self.channels_users.setdefault(self.channel_id, set()).add(self.nickname)
 
+<<<<<<< HEAD
         # Powiadom wszystkich
+=======
+    async def disconnect(self, close_code):
+        if self.nickname:
+            self.__class__.users.discard(self.nickname)
+            await self.broadcast_users()
+
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    async def receive(self, text_data=None, bytes_data=None):
+        if text_data and text_data.startswith("JOIN|"):
+            _, nick, _ = text_data.split("|", 2)
+            self.nickname = nick
+            self.__class__.users.add(nick)
+            await self.broadcast_users()
+
+        elif bytes_data:
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    "type": "voice_binary",
+                    "data": bytes_data
+                }
+            )
+
+    async def broadcast_users(self):
+        msg = "USERS|" + "|".join(sorted(self.__class__.users))
+>>>>>>> parent of b7c77ec (Update consumers.py)
         await self.channel_layer.group_send(
             self.group_name,
             {
