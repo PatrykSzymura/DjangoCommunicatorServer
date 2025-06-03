@@ -45,7 +45,7 @@ class MessagesCreateView(generics.CreateAPIView):
             {
                 "type": "notify",
                 "message": "New message sent",
-                "data": {"id": instance.channelId},
+                "data": {"id": instance.channelId_id},
             }
         )
 
@@ -66,6 +66,6 @@ class MessagesUpdateView(generics.UpdateAPIView):
             {
                 "type": "notify",
                 "message": "Message updated",
-                "data": {"id": instance.channelId},
+                "data": {"id": instance.channelId_id},
             }
         )
