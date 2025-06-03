@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.messages.context_processors import messages
 from django.contrib.messages.storage.cookie import MessageSerializer
 from django.db.models import QuerySet
@@ -32,16 +34,38 @@ class MessagesCreateView(generics.CreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def perform_create(self, serializer):
+        instance = serializer.save()
 
         author = serializer.validated_data
         #print(author)
-        if serializer.is_valid():
-            serializer.save()
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "notifications",
+            {
+                "type": "notify",
+                "message": "New message sent",
+                "data": {"id": instance.id}
+            }
+        )
 
 class MessagesUpdateView(generics.UpdateAPIView):
+    serializer_class = Messeges.MessageUpdateSerializer
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         return m.Messages.objects.filter(id=self.kwargs['pk'])
 
-    serializer_class = Messeges.MessageUpdateSerializer
-    permission_classes = (AllowAny,)
+    def perform_update(self, serializer):
+        instance = serializer.save()
+
+        # Send WebSocket notification
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "notifications",
+            {
+                "type": "notify",
+                "message": "Message updated",
+                "data": {"id": instance.id}
+            }
+        )
