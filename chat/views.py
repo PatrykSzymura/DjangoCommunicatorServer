@@ -31,7 +31,7 @@ class MessagesView(generics.ListAPIView):
 
 class MessagesCreateView(generics.CreateAPIView):
     serializer_class = Messeges.CreateSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
     def perform_create(self, serializer):
         instance = serializer.save()
@@ -45,7 +45,7 @@ class MessagesCreateView(generics.CreateAPIView):
             {
                 "type": "notify",
                 "message": "New message sent",
-                "data": {"id": instance.id}
+                "data": {"id": instance.channelId},
             }
         )
 
