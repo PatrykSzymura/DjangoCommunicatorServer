@@ -45,7 +45,7 @@ class DeleteUser(generics.DestroyAPIView):
         return m.User.objects.all()
 
     serializer_class = User.BaseUserSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def destroy(self, request, *args, **kwargs):
         try:
