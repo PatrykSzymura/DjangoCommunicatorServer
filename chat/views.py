@@ -66,6 +66,6 @@ class MessagesUpdateView(generics.UpdateAPIView):
             {
                 "type": "notify",
                 "message": "Message updated",
-                "data": {"id": instance.id}
+                "data": {"id": instance.channelId},
             }
         )
