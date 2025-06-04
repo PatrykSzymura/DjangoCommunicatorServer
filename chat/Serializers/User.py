@@ -22,6 +22,25 @@ class BaseUserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         return super().update(instance, validated_data)
 
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    new_password = serializers.CharField(write_only=True,required=True, validators=[validate_password])
+
+    class Meta:
+        model = m.User
+        fields = ('password','new_password',)
+
+    def validate_old_password(self, password):
+        user = self.context['request'].user
+        if not user.check_password(password):
+            raise serializers.ValidationError("Incorrect password")
+        return password
+
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['new_password'])
+        return instance
+
+
 class DynamicBaseUserSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop('fields', None)
@@ -45,6 +64,8 @@ class ChatUserSerializer(serializers.ModelSerializer):
         fields = ('user','nickname','authorityLevel')
         extra_kwargs = {"password": {"write_only": True}}
 
+
+
 class CreateChatUserSerializer(serializers.ModelSerializer):
     user = BaseUserSerializer()
 
@@ -57,7 +78,7 @@ class ChatUserMinimumDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.ChatUser
         fields = ('user','nickname')
-        extra_kwargs = {"password": {"write_only": True}}
+        #extra_kwargs = {"password": {"write_only": True}}
 
 class NicknameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -69,31 +90,7 @@ class ChatUserUpdateSerializer(serializers.ModelSerializer):
         model = m.ChatUser
         fields = ['nickname', 'authorityLevel']
 
-class ChangePasswordSerializer(serializers.ModelSerializer):
-    old_password    = serializers.CharField(write_only=True,required=True)
-    new_password_1  = serializers.CharField(write_only=True,required=True, validators=[validate_password])
-    new_password_2  = serializers.CharField(write_only=True, required=True,validators=[validate_password])
 
-    class Meta:
-        model = User
-        fields = ('old_password','new_password_1', 'new_password_2')
-
-    def validate(self, attrs):
-        if attrs['new_password_1'] != attrs['new_password_2']:
-            raise serializers.ValidationError("Passwords don't match")
-        return attrs
-
-    def validate_old_password(self, value):
-        user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("Incorrect password")
-        return value
-
-    def update(self, instance, validated_data):
-        instance.set_password(validated_data['new_password_1'])
-        print(instance)
-        print(validated_data)
-        return instance
 
 #TEST FIELD
 

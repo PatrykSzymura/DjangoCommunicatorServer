@@ -29,7 +29,7 @@ class MessagesView(generics.ListAPIView):
 
 class MessagesCreateView(generics.CreateAPIView):
     serializer_class = Messeges.CreateSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def perform_create(self, serializer):
         instance = serializer.save()
@@ -52,7 +52,7 @@ class MessagesCreateView(generics.CreateAPIView):
 
 class MessagesUpdateView(generics.UpdateAPIView):
     serializer_class = Messeges.MessageUpdateSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return m.Messages.objects.filter(id=self.kwargs['pk'])

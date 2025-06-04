@@ -73,22 +73,22 @@ class UserList(generics.ListAPIView):
 
 class ChangePassword(generics.UpdateAPIView):
     queryset = m.User.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = User.ChangePasswordSerializer
 
-    def perform_update(self, serializer):
-        try:
-            if self.request.user.chatuser.authorityLevel == 3:
-                serializer.save()
-            elif self.request.user.id == self.kwargs['pk']:
-                serializer.save()
-            else:
-                raise PermissionDenied
-        except:
-            raise PermissionDenied
-
-
     def update(self, request, *args, **kwargs):
-        return self.perform_update(serializer=self.serializer_class)
+        instance = self.get_object()  # get the user instance
+        serializer = self.get_serializer(instance, data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({'detail': 'Password changed successfully'}, status=status.HTTP_200_OK)
+
+    def perform_update(self, serializer):
+        if  self.request.user.chatuser.authorityLevel == 3:
+            serializer.save()
+        elif  self.request.user.id == int(self.kwargs['pk']):
+            serializer.save()
+        else:
+            raise PermissionDenied("You don't have permission to change this user's password.")
 
 
