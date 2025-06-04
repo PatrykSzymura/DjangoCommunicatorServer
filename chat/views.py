@@ -43,7 +43,10 @@ class MessagesCreateView(generics.CreateAPIView):
             {
                 "type": "notify",
                 "message": "New Messege",
-                "data": {"Channel_id": channel_id, "Author": instance.author.nickname},
+                "data": {
+                    "event": "new_messege",
+                    "Channel_id": channel_id,
+                    "Author": instance.author.nickname},
             }
         )
 
