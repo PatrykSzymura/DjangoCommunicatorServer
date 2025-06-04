@@ -73,7 +73,7 @@ class UserList(generics.ListAPIView):
 
 class ChangePassword(generics.UpdateAPIView):
     queryset = m.User.objects.all()
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     serializer_class = User.ChangePasswordSerializer
 
     def update(self, request, *args, **kwargs):
