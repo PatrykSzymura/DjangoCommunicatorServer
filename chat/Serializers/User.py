@@ -126,7 +126,7 @@ class UpdateAccountData(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'nickname']
+        fields = ['username','first_name','last_name', 'email', 'nickname']
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)

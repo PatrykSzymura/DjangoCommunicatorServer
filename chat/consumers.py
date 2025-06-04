@@ -27,7 +27,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         self.channel_group = f"channel_{self.channel_id}"
         await self.channel_layer.group_add(self.channel_group, self.channel_name)
 
-        # ✅ Personal user group
+        # Personal user group
         self.user_group = f"user_{self.user.id}"
         await self.channel_layer.group_add(self.user_group, self.channel_name)
 
@@ -39,7 +39,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(self.user_group, self.channel_name)
         except:
             print("user is not in channel group")
-
 
     async def receive(self, text_data):
         # Optional: handle messages sent from frontend
@@ -60,9 +59,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             return ChannelMembers.objects.filter(user=chat_user, channel__id=channel_id).exists()
         except ChatUser.DoesNotExist:
             return False
-
-
-
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
     channels_users = {}  # channel_id -> set of nicknames
