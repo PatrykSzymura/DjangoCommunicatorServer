@@ -44,25 +44,26 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 class ChannelNotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.channel_id = self.scope["url_route"]["kwargs"]["channel_id"]
         self.user = self.scope["user"]
 
-        if self.user is None or isinstance(self.user, AnonymousUser):
+        if not self.user or self.user.is_anonymous:
             await self.close()
             return
 
+        self.channel_id = self.scope["url_route"]["kwargs"]["channel_id"]
         is_member = await self.user_in_channel(self.user.id, self.channel_id)
+
         if not is_member:
             await self.close()
             return
 
-        # Group for channel
-        self.group_name = f"channel_{self.channel_id}"
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        # Channel group
+        self.channel_group = f"channel_{self.channel_id}"
+        await self.channel_layer.group_add(self.channel_group, self.channel_name)
 
-        # Group for user
-        self.user_group_name = f"user_{self.user.id}"
-        await self.channel_layer.group_add(self.user_group_name, self.channel_name)
+        # ✅ Personal group (MUST HAVE THIS)
+        self.user_group = f"user_{self.user.id}"
+        await self.channel_layer.group_add(self.user_group, self.channel_name)
 
         await self.accept()
 
@@ -74,6 +75,7 @@ class ChannelNotificationConsumer(AsyncWebsocketConsumer):
         pass
 
     async def notify(self, event):
+        print(f"📨 Notifying user {self.user.id} | event: {event}")
         await self.send(text_data=json.dumps({
             "type": "notification",
             "message": event.get("message"),
