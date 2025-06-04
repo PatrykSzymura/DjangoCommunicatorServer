@@ -21,8 +21,6 @@ def index(request):
     rendered = render_to_string("sus.html")
     return HttpResponse(rendered)
 
-from rest_framework_simplejwt.views import TokenObtainPairView
-
 class MessagesView(generics.ListAPIView):
     def get_queryset(self):
         return m.Messages.objects.filter(channelId=self.kwargs['pk'])
@@ -45,7 +43,7 @@ class MessagesCreateView(generics.CreateAPIView):
             {
                 "type": "notify",
                 "message": "New Messege",
-                "data": {"Channel_id": channel_id, "Author": author.id},
+                "data": {"Channel_id": channel_id, "Author": instance.author.nickname},
             }
         )
 
