@@ -6,7 +6,7 @@ from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
 from .models import Channel, ChannelMembers, ChatUser
 
-class ChannelNotificationConsumer(AsyncWebsocketConsumer):
+class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
 
