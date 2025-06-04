@@ -36,9 +36,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         try:
             await self.channel_layer.group_discard(self.channel_group, self.channel_name)
+            await self.channel_layer.group_discard(self.user_group, self.channel_name)
         except:
             print("user is not in channel group")
-        await self.channel_layer.group_discard(self.user_group, self.channel_name)
+
 
     async def receive(self, text_data):
         # Optional: handle messages sent from frontend
