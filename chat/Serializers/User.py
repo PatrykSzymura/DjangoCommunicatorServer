@@ -70,9 +70,9 @@ class ChatUserUpdateSerializer(serializers.ModelSerializer):
         fields = ['nickname', 'authorityLevel']
 
 class ChangePasswordSerializer(serializers.ModelSerializer):
-    old_password    = serializers.CharField(write_only=True,required=True, validators=[validate_password])
-    new_password_1  = serializers.CharField(write_only=True,required=True)
-    new_password_2  = serializers.CharField(write_only=True, required=True)
+    old_password    = serializers.CharField(write_only=True,required=True)
+    new_password_1  = serializers.CharField(write_only=True,required=True, validators=[validate_password])
+    new_password_2  = serializers.CharField(write_only=True, required=True,validators=[validate_password])
 
     class Meta:
         model = User

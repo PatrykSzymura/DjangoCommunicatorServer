@@ -71,3 +71,26 @@ class UserList(generics.ListAPIView):
 
     permission_classes = (AllowAny,)
 
+class ChangePassword(generics.UpdateAPIView):
+    queryset = m.User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = User.ChangePasswordSerializer
+
+    def perform_update(self, serializer):
+        if not self.request.user.is_anonymous:
+            try:
+                if self.request.user.chatuser.authorityLevel == 3:
+                    serializer.save()
+                elif self.request.user.id == self.kwargs['pk']:
+                    serializer.save()
+                else:
+                    raise PermissionDenied
+            except:
+                raise PermissionDenied
+        else:
+            raise PermissionDenied
+
+    def update(self, request, *args, **kwargs):
+        return self.perform_update(serializer=self.serializer_class)
+
+
