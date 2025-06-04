@@ -12,6 +12,8 @@ from chat import models as m
 
 from chat.Serializers.ChannelMembers import Serializer, AddMemberSerializer, RemoveMemberSerializer
 from chat.models import ChatUser, Channel, ChannelMembers
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 class GetMembersList(generics.ListAPIView):
@@ -28,6 +30,8 @@ class GetMyChannel(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
 
 
+
+
 class AddMember(generics.CreateAPIView):
     queryset = ChannelMembers.objects.all()
     serializer_class = AddMemberSerializer
@@ -35,10 +39,25 @@ class AddMember(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         if serializer.is_valid():
-            serializer.save()
+            member = serializer.save()
+            channel_id = member.channel.id
+
+            # Notify users in the channel
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"channel_{channel_id}",
+                {
+                    "type": "notify",
+                    "message": f"New user added to channel {channel_id}",
+                    "data": {
+                        "event": "user_added",
+                        "user_id": member.user.id,
+                        "channel_id": channel_id
+                    }
+                }
+            )
         else:
             print(serializer.errors)
-
 class DeleteMember(generics.RetrieveDestroyAPIView):
     serializer_class = RemoveMemberSerializer
     permission_classes = (AllowAny,)
@@ -53,16 +72,33 @@ class DeleteMember(generics.RetrieveDestroyAPIView):
         try:
             chat_user = ChatUser.objects.get(user__id=user_id)
             channel_member = ChannelMembers.objects.get(user=chat_user, channel__id=channel_id)
+            return channel_member
         except ChatUser.DoesNotExist:
             raise NotFound("ChatUser with the given user_id does not exist.")
         except ChannelMembers.DoesNotExist:
             raise NotFound("ChannelMember with the given user_id and channel_id does not exist.")
 
-        return channel_member
-
     def destroy(self, request, *args, **kwargs):
         channel_member = self.get_object()
+        channel_id = channel_member.channel.id
+        user_id = channel_member.user.id
         channel_member.delete()
+
+        # Send notification to remaining users
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"channel_{channel_id}",
+            {
+                "type": "notify",
+                "message": f"User removed from channel {channel_id}",
+                "data": {
+                    "event": "user_removed",
+                    "user_id": user_id,
+                    "channel_id": channel_id
+                }
+            }
+        )
+
         return Response(status=status.HTTP_200_OK)
 
 

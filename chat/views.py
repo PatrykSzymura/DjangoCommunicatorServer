@@ -39,14 +39,13 @@ class MessagesCreateView(generics.CreateAPIView):
         author = serializer.validated_data
         #print(author)
         channel_id = instance.channelId.id
-        messege = f'New Messege on {instance.channelId.name} sent by {instance.author.nickname}'
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             f"channel_{channel_id}",
             {
                 "type": "notify",
-                "message": messege,
-                "data": {"id": channel_id},
+                "message": "New Messege",
+                "data": {"Channel_id": channel_id, "Author": author.id},
             }
         )
 
