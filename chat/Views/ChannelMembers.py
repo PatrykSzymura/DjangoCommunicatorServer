@@ -96,18 +96,18 @@ class DeleteMember(generics.RetrieveDestroyAPIView):
         chat_user = channel_member.user
         user_id = chat_user.user.id  # Django auth User ID
 
-        # Delete member
+        # Delete member from channel
         channel_member.delete()
 
-        # Set up channel layer
+        # Prepare channel layer
         channel_layer = get_channel_layer()
 
-        # Notify remaining users in the channel
+        # Notify all remaining members in the channel
         async_to_sync(channel_layer.group_send)(
             f"channel_{channel_id}",
             {
                 "type": "notify",
-                "message": f"User {chat_user.nickname} removed from channel {channel_id}",
+                "message": f"{chat_user.nickname} was removed from the channel.",
                 "data": {
                     "event": "user_removed",
                     "user_id": user_id,
@@ -121,7 +121,7 @@ class DeleteMember(generics.RetrieveDestroyAPIView):
             f"user_{user_id}",
             {
                 "type": "notify",
-                "message": f"You were removed from channel {channel_id}",
+                "message": f"You were removed from channel {channel_id}.",
                 "data": {
                     "event": "removed_you",
                     "channel_id": channel_id
@@ -130,5 +130,4 @@ class DeleteMember(generics.RetrieveDestroyAPIView):
         )
 
         return Response(status=status.HTTP_200_OK)
-
 

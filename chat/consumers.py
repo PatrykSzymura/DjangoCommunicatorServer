@@ -6,42 +6,6 @@ from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
 from .models import Channel, ChannelMembers, ChatUser
 
-class NotificationConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        self.channel_id = self.scope['url_route']['kwargs']['channel_id']
-        self.group_name = f"channel_{self.channel_id}"
-
-        user = self.scope["user"]
-        print(user)
-        has_access = await self.user_has_channel_access(user, self.channel_id)
-        if not has_access:
-            await self.close()
-            print("user has no access")
-            return
-
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
-        await self.accept()
-
-    async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
-
-    async def notify(self, event):
-        await self.send(text_data=json.dumps({
-            "type": "notification",
-            "message": event["message"],
-            "data": event.get("data", {})
-        }))
-
-    @database_sync_to_async
-    def user_has_channel_access(self, user, channel_id):
-        if isinstance(user, AnonymousUser):
-            return False
-        try:
-            chat_user = ChatUser.objects.get(user=user)
-        except ChatUser.DoesNotExist:
-            return False
-        return ChannelMembers.objects.filter(channel_id=channel_id, user=chat_user).exists()
-
 class ChannelNotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
@@ -61,17 +25,18 @@ class ChannelNotificationConsumer(AsyncWebsocketConsumer):
         self.channel_group = f"channel_{self.channel_id}"
         await self.channel_layer.group_add(self.channel_group, self.channel_name)
 
-        # ✅ Personal group (MUST HAVE THIS)
+        # ✅ Personal user group
         self.user_group = f"user_{self.user.id}"
         await self.channel_layer.group_add(self.user_group, self.channel_name)
 
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
-        await self.channel_layer.group_discard(self.user_group_name, self.channel_name)
+        await self.channel_layer.group_discard(self.channel_group, self.channel_name)
+        await self.channel_layer.group_discard(self.user_group, self.channel_name)
 
     async def receive(self, text_data):
+        # Optional: handle messages sent from frontend
         pass
 
     async def notify(self, event):
@@ -89,6 +54,7 @@ class ChannelNotificationConsumer(AsyncWebsocketConsumer):
             return ChannelMembers.objects.filter(user=chat_user, channel__id=channel_id).exists()
         except ChatUser.DoesNotExist:
             return False
+
 
 
 
