@@ -4,6 +4,8 @@ import json
 
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
+from django.http.request import RAISE_ERROR
+
 from .models import Channel, ChannelMembers, ChatUser
 
 class NotificationConsumer(AsyncWebsocketConsumer):
@@ -32,7 +34,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.channel_group, self.channel_name)
+        try:
+            await self.channel_layer.group_discard(self.channel_group, self.channel_name)
+        except:
+            print("user is not in channel group")
         await self.channel_layer.group_discard(self.user_group, self.channel_name)
 
     async def receive(self, text_data):
@@ -40,7 +45,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         pass
 
     async def notify(self, event):
-        print(f"📨 Notifying user {self.user.id} | event: {event}")
+        print(f"Notifying user {self.user.id} | event: {event}")
         await self.send(text_data=json.dumps({
             "type": "notification",
             "message": event.get("message"),
