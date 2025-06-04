@@ -1,7 +1,3 @@
-# yourapp/middleware.py
-
-from urllib.parse import parse_qs
-from rest_framework_simplejwt.tokens import UntypedToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth.models import AnonymousUser
 from channels.middleware import BaseMiddleware
@@ -18,9 +14,6 @@ def get_user(validated_token):
         return AnonymousUser()
 
 class JWTAuthMiddleware(BaseMiddleware):
-    """
-    Custom middleware that reads the JWT token from query string or headers.
-    """
 
     async def __call__(self, scope, receive, send):
         headers = dict(scope["headers"])

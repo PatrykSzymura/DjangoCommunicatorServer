@@ -15,7 +15,7 @@ class AllBrief(generics.ListAPIView):
     def get_queryset(self):
         chat_user = self.request.user.chatuser
         try:
-            print(f"{m.ChannelMembers.objects.filter(user=chat_user)}")
+            #print(f"{m.ChannelMembers.objects.filter(user=chat_user)}")
             if chat_user.authorityLevel == 3:
                return m.Channel.objects.all()
             return m.Channel.objects.filter(channelmembers__user=chat_user).distinct()

@@ -56,6 +56,18 @@ class AddMember(generics.CreateAPIView):
                     }
                 }
             )
+
+            async_to_sync(channel_layer.group_send)(
+                f"user_{member.user.id}",
+                {
+                    "type": "notify",
+                    "message": "You were added to a new channel.",
+                    "data": {
+                        "event": "added_you",
+                        "channel_id": channel_id
+                    }
+                }
+            )
         else:
             print(serializer.errors)
 class DeleteMember(generics.RetrieveDestroyAPIView):
@@ -94,6 +106,18 @@ class DeleteMember(generics.RetrieveDestroyAPIView):
                 "data": {
                     "event": "user_removed",
                     "user_id": user_id,
+                    "channel_id": channel_id
+                }
+            }
+        )
+
+        async_to_sync(channel_layer.group_send)(
+            f"user_{user_id}",
+            {
+                "type": "notify",
+                "message": "You were removed from a channel.",
+                "data": {
+                    "event": "removed_you",
                     "channel_id": channel_id
                 }
             }
