@@ -10,6 +10,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_id']
         self.group_name = f"channel_{self.channel_id}"
+
         user = self.scope["user"]
         print(user)
         has_access = await self.user_has_channel_access(user, self.channel_id)
