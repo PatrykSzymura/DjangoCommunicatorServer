@@ -15,10 +15,8 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Add ASGI configuration
 ASGI_APPLICATION = "DjangoCommunicatorServer.asgi.application"
 
-# Redis backend for channel layer
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",

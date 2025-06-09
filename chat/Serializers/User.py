@@ -65,15 +65,6 @@ class ChatUserSerializer(serializers.ModelSerializer):
         fields = ('user','nickname','authorityLevel')
         extra_kwargs = {"password": {"write_only": True}}
 
-
-
-class CreateChatUserSerializer(serializers.ModelSerializer):
-    user = BaseUserSerializer()
-
-    class Meta:
-        model = m.ChatUser
-        fields = ['user','nickname']
-
 class ChatUserMinimumDataSerializer(serializers.ModelSerializer):
     user = DynamicBaseUserSerializer(fields=['id','username'],read_only=True)
     class Meta:
@@ -91,10 +82,6 @@ class ChatUserUpdateSerializer(serializers.ModelSerializer):
         model = m.ChatUser
         fields = ['nickname', 'authorityLevel']
 
-
-
-#TEST FIELD
-
 class AdminAccessUserSerializer(serializers.ModelSerializer):
     user = DynamicBaseUserSerializer(fields=['id','username','last_name', 'email', 'first_name'],read_only=True)
     class Meta:
@@ -106,18 +93,47 @@ class CreateAccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username','first_name','last_name', 'password', 'email', 'nickname']
+        fields = ['username', 'first_name', 'last_name', 'password', 'email', 'nickname']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
     def create(self, validated_data):
         nickname = validated_data.pop('nickname', '')
 
-        # Tworzenie użytkownika
+        # Create user
         user = User.objects.create_user(**validated_data)
 
-        # Tworzenie powiązanego ChatUser z authorityLevel=0
+        # Create linked ChatUser
         ChatUser.objects.create(user=user, nickname=nickname, authorityLevel=1)
 
         return user
+
+    def update(self, instance, validated_data):
+        # Update related ChatUser nickname if provided
+        nickname = validated_data.pop('nickname', None)
+
+        # Update User fields
+        for attr, value in validated_data.items():
+            if attr == 'password':
+                instance.set_password(value)
+            else:
+                setattr(instance, attr, value)
+        instance.save()
+
+        # Update ChatUser nickname
+        if nickname is not None:
+            try:
+                chat_user = ChatUser.objects.get(user=instance)
+                chat_user.nickname = nickname
+                chat_user.save()
+            except ChatUser.DoesNotExist:
+                # Create one if it doesn't exist (optional fallback)
+                ChatUser.objects.create(user=instance, nickname=nickname, authorityLevel=1)
+
+        return instance
+
+
 
 class UpdateAccountData(serializers.ModelSerializer):
     nickname = serializers.CharField(source='chatuser.nickname', required=False)

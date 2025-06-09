@@ -17,7 +17,7 @@ urlpatterns = [
     path('user/register/', UserViews.CreateUser.as_view(), name='register_user'),
     path('user/resetpassword/<int:pk>', UserViews.ChangePassword.as_view(), name='password_reset'),
     path('user/profile/<int:pk>',UserViews.UpdateUser.as_view(), name='user_profile'),
-    path('user/delete/<int:pk>', UserViews.DeleteUser.as_view(), name='update_user'),
+    path('user/delete/<int:pk>', UserViews.DeleteUser.as_view(), name='delete_user'),
 
     path('user/get/current/<int:pk>', UserViews.RestrictedGetUserData.as_view(), name='get_current_user'),
     path('user/get/list', UserViews.UserList.as_view(), name='get_user_list'),
