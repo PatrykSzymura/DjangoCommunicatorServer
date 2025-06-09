@@ -37,7 +37,7 @@ class CreateUser(generics.CreateAPIView):
 class UpdateUser(generics.RetrieveUpdateAPIView):
     queryset = BaseUser.objects.all()
     serializer_class = User.UpdateAccountData
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
 class DeleteUser(generics.DestroyAPIView):
 
