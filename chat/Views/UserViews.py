@@ -82,24 +82,16 @@ class UpdateUser(generics.RetrieveUpdateAPIView):
 
 
 class DeleteUser(generics.DestroyAPIView):
-
-    def get_queryset(self):
-        return m.User.objects.all()
-
+    queryset = m.User.objects.all()
     serializer_class = User.BaseUserSerializer
     permission_classes = (IsAuthenticated,)
 
     def destroy(self, request, *args, **kwargs):
-        try:
-            if request.user.chatuser.authorityLevel == 3:
-                instance = self.get_object()
-                instance.delete()
-                return Response(status=status.HTTP_200_OK)
-            else:
-                raise PermissionDenied
-        except:
-            return PermissionDenied
-        return Response(status=status.HTTP_403_FORBIDDEN)
+        if request.user.chatuser.authorityLevel == 3:
+            instance = self.get_object()
+            instance.delete()
+            return Response(status=status.HTTP_200_OK)
+        raise PermissionDenied()
 
 class UserList(generics.ListAPIView):
     queryset = m.ChatUser.objects.all()
