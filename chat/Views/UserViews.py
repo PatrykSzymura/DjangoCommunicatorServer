@@ -94,15 +94,15 @@ class DeleteUser(generics.DestroyAPIView):
         raise PermissionDenied()
 
 class UserList(generics.ListAPIView):
-    queryset = m.ChatUser.objects.all()
+    queryset = m.ChatUser.objects.filter(user_id__gte=1)
     def get_serializer_class(self):
         try:
             if self.request.user.chatuser.authorityLevel == 3:
                 return User.AdminAccessUserSerializer
             else:
-                raise PermissionDenied("You don't have permission to delete user")
+                raise PermissionDenied("You don't have permission to get user list")
         except:
-            raise PermissionDenied("You don't have permission to delete user")
+            raise PermissionDenied("You don't have permission to get user list")
 
     permission_classes = (AllowAny,)
 
