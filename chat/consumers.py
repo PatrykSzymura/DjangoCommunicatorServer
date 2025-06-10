@@ -59,7 +59,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             return ChannelMembers.objects.filter(user=chat_user, channel__id=channel_id).exists()
         except ChatUser.DoesNotExist:
             return False
-
+            
 active_users = {}  # {channel_name: set(usernames)}
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
@@ -93,6 +93,15 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
             users.add(sender)
             active_users[self.group_name] = users
             await self.send_user_list()
+        elif msg_type == "mute_status":
+            # Broadcast mute status to other users
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    "type": "forward_message",
+                    "message": data
+                }
+            )
         else:
             # Przekazywanie wiadomości
             await self.channel_layer.group_send(
