@@ -50,6 +50,7 @@ class CreateUser(generics.CreateAPIView):
                     }
                 }
             )
+        return Response(status=status.HTTP_200_OK)
 
 class UpdateUser(generics.RetrieveUpdateAPIView):
     queryset = BaseUser.objects.all()
