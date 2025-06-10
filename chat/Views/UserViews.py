@@ -98,7 +98,7 @@ class DeleteUser(generics.DestroyAPIView):
             else:
                 raise PermissionDenied
         except:
-            return PermissionDenied()
+            return PermissionDenied
 
 class UserList(generics.ListAPIView):
     queryset = m.ChatUser.objects.all()
