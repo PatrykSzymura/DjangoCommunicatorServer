@@ -37,8 +37,12 @@ class CreateUser(generics.CreateAPIView):
 class UpdateUser(generics.RetrieveUpdateAPIView):
     queryset = BaseUser.objects.all()
     serializer_class = User.UpdateAccountData
+    def get_queryset(self):
+        print(self.request.data)
+        return BaseUser.objects.all()
 
     permission_classes = (AllowAny,)
+
 
 class DeleteUser(generics.DestroyAPIView):
 
