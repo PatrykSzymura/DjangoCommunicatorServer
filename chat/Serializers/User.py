@@ -1,6 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from rest_framework.exceptions import ValidationError
 
 from chat import models as m
 from chat.models import ChatUser
@@ -103,8 +104,8 @@ class CreateAccountSerializer(serializers.ModelSerializer):
         password = validated_data.get('password')
         try:
             validate_password(password)
-        except DjangoValidationError as e:
-            raise ValidationError({"password": e.messages})
+        except:
+            raise ValidationError
 
         # Create user
         user = User.objects.create_user(**validated_data)
