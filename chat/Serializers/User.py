@@ -100,6 +100,11 @@ class CreateAccountSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         nickname = validated_data.pop('nickname', '')
+        password = validated_data.get('password')
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            raise ValidationError({"password": e.messages})
 
         # Create user
         user = User.objects.create_user(**validated_data)
