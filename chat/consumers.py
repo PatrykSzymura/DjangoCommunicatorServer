@@ -60,6 +60,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         except ChatUser.DoesNotExist:
             return False
 
+
+
 active_users = {}  # {channel_name: set(usernames)}
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
@@ -68,15 +70,16 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         self.group_name = f"voice_{self.channel_name_param}"
         self.username = None
 
-        # Wchodzenie na kanał głosowy
+        # Join the channel group
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
         if self.username:
             users = active_users.get(self.group_name, set())
-            users.discard(self.username)
-            active_users[self.group_name] = users
+            if users:  # Check if users exist before modifying
+                users.discard(self.username)
+                active_users[self.group_name] = users
             await self.send_user_list()
 
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
@@ -85,11 +88,13 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         msg_type = data.get("type")
         sender = data.get("from")
+        recipient = data.get("to")  # Get the recipient
 
-        # Zapisywanie nazwy użytkownika
         if msg_type == "join":
             self.username = sender
             users = active_users.get(self.group_name, set())
+            if users is None:
+                users = set()
             users.add(sender)
             active_users[self.group_name] = users
             await self.send_user_list()
@@ -103,23 +108,26 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
                 }
             )
         else:
-            # Przekazywanie wiadomości
-            await self.channel_layer.group_send(
-                self.group_name,
-                {
-                    "type": "forward_message",
-                    "message": data
-                }
-            )
+            # Forward the message to the specified recipient
+            if recipient:
+                await self.channel_layer.send(
+                    self.channel_name,  # Send to this specific instance
+                    {
+                        "type": "forward_message",
+                        "message": data
+                    }
+                )
+            else:
+                print(f"Error: Recipient not specified for message type {msg_type}")
 
     async def forward_message(self, event):
         message = event["message"]
-        # Brak odsyłu do siebie samego
+        # Don't send the message back to the sender
         if message.get("from") != self.username:
             await self.send(text_data=json.dumps(message))
 
     async def send_user_list(self):
-        users = sorted(active_users.get(self.group_name, set()))
+        users = sorted(active_users.get(self.group_name, set()) or [])  # Handle None case
         await self.channel_layer.group_send(
             self.group_name,
             {
