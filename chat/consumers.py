@@ -67,7 +67,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 
-class VoiceChatConsumer(AsyncWebsocketConsumer):
+class VoiceChannelConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.room_name = None
