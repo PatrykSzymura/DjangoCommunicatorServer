@@ -62,59 +62,71 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             
 active_users = {}  # {channel_name: set(usernames)}
 
-# consumers.py
-import json
-from channels.generic.websocket import AsyncWebsocketConsumer
-
-
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.room_name = None
-        self.room_group_name = None
-
     async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = f'chat_{self.room_name}'
+        self.channel_name_param = self.scope['url_route']['kwargs']['channel_name']
+        self.group_name = f"voice_{self.channel_name_param}"
+        self.username = None
 
-        # Join room group
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
-
+        # Wchodzenie na kanał głosowy
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
-        # Leave room group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        if self.username:
+            users = active_users.get(self.group_name, set())
+            users.discard(self.username)
+            active_users[self.group_name] = users
+            await self.send_user_list()
 
-    # Receive message from WebSocket
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-        peer_id = text_data_json.get('peer_id', 'unknown_peer')
+        data = json.loads(text_data)
+        msg_type = data.get("type")
+        sender = data.get("from")
 
-        # Send message to room group
+        # Zapisywanie nazwy użytkownika
+        if msg_type == "join":
+            self.username = sender
+            users = active_users.get(self.group_name, set())
+            users.add(sender)
+            active_users[self.group_name] = users
+            await self.send_user_list()
+        elif msg_type == "mute_status":
+            # Broadcast mute status to other users
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    "type": "forward_message",
+                    "message": data
+                }
+            )
+        else:
+            # Przekazywanie wiadomości
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    "type": "forward_message",
+                    "message": data
+                }
+            )
+
+    async def forward_message(self, event):
+        message = event["message"]
+        # Brak odsyłu do siebie samego
+        if message.get("from") != self.username:
+            await self.send(text_data=json.dumps(message))
+
+    async def send_user_list(self):
+        users = sorted(active_users.get(self.group_name, set()))
         await self.channel_layer.group_send(
-            self.room_group_name,
+            self.group_name,
             {
-                'type': 'chat_message',
-                'message': message,
-                'peer_id': peer_id
+                "type": "forward_message",
+                "message": {
+                    "type": "user_list",
+                    "users": users
+                }
             }
         )
-
-    # Receive message from room group
-    async def chat_message(self, event):
-        message = event['message']
-        peer_id = event['peer_id']
-
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
-            'message': message,
-            'peer_id': peer_id
-        }))
