@@ -60,8 +60,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         except ChatUser.DoesNotExist:
             return False
 
-
-
 active_users = {}  # {channel_name: set(usernames)}
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
@@ -138,3 +136,4 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
                 }
             }
         )
+
