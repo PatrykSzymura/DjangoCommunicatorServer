@@ -107,9 +107,9 @@ class UserList(generics.ListAPIView):
             if self.request.user.chatuser.authorityLevel == 3:
                 return User.AdminAccessUserSerializer
             else:
-                raise PermissionDenied
+                raise PermissionDenied("You don't have permission to delete user")
         except:
-            raise PermissionDenied
+            raise PermissionDenied("You don't have permission to delete user")
 
     permission_classes = (AllowAny,)
 
