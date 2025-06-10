@@ -1,4 +1,5 @@
 from django.contrib.auth.password_validation import validate_password
+from django.core import validators
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.exceptions import ValidationError
@@ -96,7 +97,7 @@ class CreateAccountSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'first_name', 'last_name', 'password', 'email', 'nickname']
         extra_kwargs = {
-            'password': {'write_only': True}
+            'password': {'write_only': True,}
         }
 
     def create(self, validated_data):
@@ -105,7 +106,7 @@ class CreateAccountSerializer(serializers.ModelSerializer):
         try:
             validate_password(password)
         except:
-            raise ValidationError
+            raise ValidationError(message="Password doesn't meet criteria.")
 
         # Create user
         user = User.objects.create_user(**validated_data)

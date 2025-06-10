@@ -1,4 +1,6 @@
 # Create your views here.
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework import generics, viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
@@ -7,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from django.contrib.auth.models import User as BaseUser
 from chat import models as m
-
+from chat.models import ChatUser
 
 
 class GetUserData(generics.RetrieveAPIView):
@@ -34,6 +36,21 @@ class CreateUser(generics.CreateAPIView):
     serializer_class = User.CreateAccountSerializer
     permission_classes = (AllowAny,)
 
+    def create(self,request,*args,**kwargs):
+        channel_layer = get_channel_layer()
+        for u in ChatUser.objects.filter(authorityLevel=3):
+            async_to_sync(channel_layer.group_send)(
+                f"user_{u.id}",
+                {
+                    "type": "notify",
+                    "message": "New User Registered",
+                    "data": {
+                        "event": "user_register",
+                        "data": f"{request.data}"
+                    }
+                }
+            )
+
 class UpdateUser(generics.RetrieveUpdateAPIView):
     queryset = BaseUser.objects.all()
     serializer_class = User.UpdateAccountData
@@ -42,6 +59,21 @@ class UpdateUser(generics.RetrieveUpdateAPIView):
         return BaseUser.objects.all()
 
     permission_classes = (AllowAny,)
+
+    def update(self, request, *args, **kwargs):
+        channel_layer = get_channel_layer()
+        for u in ChatUser.objects.filter(authorityLevel=3):
+            async_to_sync(channel_layer.group_send)(
+                f"user_{u.id}",
+                {
+                    "type": "notify",
+                    "message": "User data updated",
+                    "data": {
+                        "event": "user_update",
+                        "channel_id": ""
+                    }
+                }
+            )
 
 
 class DeleteUser(generics.DestroyAPIView):

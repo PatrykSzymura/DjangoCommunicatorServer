@@ -1,9 +1,5 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from django.contrib.messages.context_processors import messages
-from django.contrib.messages.storage.cookie import MessageSerializer
-from django.db.models import QuerySet
-from django.shortcuts import render
 from django.template.loader import render_to_string
 
 # Create your views here.
