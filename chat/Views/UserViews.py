@@ -50,7 +50,9 @@ class CreateUser(generics.CreateAPIView):
                     }
                 }
             )
-        return Response(status=status.HTTP_200_OK)
+            super().create(request, *args, **kwargs)
+
+        return Response(status=status.HTTP_201_CREATED)
 
 class UpdateUser(generics.RetrieveUpdateAPIView):
     queryset = BaseUser.objects.all()
@@ -62,6 +64,7 @@ class UpdateUser(generics.RetrieveUpdateAPIView):
     permission_classes = (AllowAny,)
 
     def update(self, request, *args, **kwargs):
+        super().update(request, *args, **kwargs)
         channel_layer = get_channel_layer()
         for u in ChatUser.objects.filter(authorityLevel=3):
             async_to_sync(channel_layer.group_send)(
@@ -75,6 +78,7 @@ class UpdateUser(generics.RetrieveUpdateAPIView):
                     }
                 }
             )
+
 
 
 class DeleteUser(generics.DestroyAPIView):
