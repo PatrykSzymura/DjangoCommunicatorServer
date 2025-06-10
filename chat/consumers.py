@@ -59,7 +59,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             return ChannelMembers.objects.filter(user=chat_user, channel__id=channel_id).exists()
         except ChatUser.DoesNotExist:
             return False
-            
+
 active_users = {}  # {channel_name: set(usernames)}
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
