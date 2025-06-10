@@ -99,6 +99,7 @@ class DeleteUser(generics.DestroyAPIView):
                 raise PermissionDenied
         except:
             return PermissionDenied
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
 class UserList(generics.ListAPIView):
     queryset = m.ChatUser.objects.all()
