@@ -61,24 +61,22 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             return False
 
 active_users = {}  # {channel_name: set(usernames)}
-import asyncio  # Import asyncio
 
 class VoiceChannelConsumer(AsyncWebsocketConsumer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.active_users = set()  # Instance-level active users
-
     async def connect(self):
         self.channel_name_param = self.scope['url_route']['kwargs']['channel_name']
         self.group_name = f"voice_{self.channel_name_param}"
         self.username = None
 
+        # Wchodzenie na kanał głosowy
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
         if self.username:
-            self.active_users.discard(self.username)
+            users = active_users.get(self.group_name, set())
+            users.discard(self.username)
+            active_users[self.group_name] = users
             await self.send_user_list()
 
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
@@ -88,11 +86,15 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
         msg_type = data.get("type")
         sender = data.get("from")
 
+        # Zapisywanie nazwy użytkownika
         if msg_type == "join":
             self.username = sender
-            self.active_users.add(sender)
+            users = active_users.get(self.group_name, set())
+            users.add(sender)
+            active_users[self.group_name] = users
             await self.send_user_list()
         elif msg_type == "mute_status":
+            # Broadcast mute status to other users
             await self.channel_layer.group_send(
                 self.group_name,
                 {
@@ -101,6 +103,7 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
                 }
             )
         else:
+            # Przekazywanie wiadomości
             await self.channel_layer.group_send(
                 self.group_name,
                 {
@@ -111,19 +114,19 @@ class VoiceChannelConsumer(AsyncWebsocketConsumer):
 
     async def forward_message(self, event):
         message = event["message"]
+        # Brak odsyłu do siebie samego
         if message.get("from") != self.username:
             await self.send(text_data=json.dumps(message))
 
     async def send_user_list(self):
-        user_list = sorted(list(self.active_users))  # Convert set to list for sorting
+        users = sorted(active_users.get(self.group_name, set()))
         await self.channel_layer.group_send(
             self.group_name,
             {
                 "type": "forward_message",
                 "message": {
                     "type": "user_list",
-                    "users": user_list
+                    "users": users
                 }
             }
         )
-
