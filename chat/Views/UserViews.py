@@ -61,7 +61,7 @@ class UpdateUser(generics.RetrieveUpdateAPIView):
         print(self.request.data)
         return BaseUser.objects.all()
 
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
@@ -104,11 +104,11 @@ class UserList(generics.ListAPIView):
         except:
             raise PermissionDenied("You don't have permission to get user list")
 
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
 class ChangePassword(generics.UpdateAPIView):
     queryset = m.User.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = User.ChangePasswordSerializer
 
     def update(self, request, *args, **kwargs):

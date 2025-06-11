@@ -25,6 +25,5 @@ from chat import views  as chat_views
 urlpatterns = [
         path('admin/', admin.site.urls),
         #path('', chat_views.index, name='index'),
-        path('api-auth/', include('rest_framework.urls')),
         path('api/', include('chat.urls')),
 ]

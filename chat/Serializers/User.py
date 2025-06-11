@@ -43,7 +43,6 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class DynamicBaseUserSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop('fields', None)
@@ -78,11 +77,6 @@ class NicknameSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.ChatUser
         fields = ('id','nickname',)
-
-class ChatUserUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = m.ChatUser
-        fields = ['nickname', 'authorityLevel']
 
 class AdminAccessUserSerializer(serializers.ModelSerializer):
     user = DynamicBaseUserSerializer(fields=['id','username','last_name', 'email', 'first_name'],read_only=True)

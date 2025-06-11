@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from chat import models as m
 
-from chat.Serializers.ChannelMembers import Serializer, AddMemberSerializer, RemoveMemberSerializer
+from chat.Serializers.ChannelMembers import ChannelMemberSerializer, AddMemberSerializer, RemoveMemberSerializer
 from chat.models import ChatUser, Channel, ChannelMembers
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -19,14 +19,14 @@ from asgiref.sync import async_to_sync
 class GetMembersList(generics.ListAPIView):
     def get_queryset(self):
         return m.ChannelMembers.objects.filter(channel=self.kwargs['pk'])
-    serializer_class = Serializer
+    serializer_class = ChannelMemberSerializer
     permission_classes = (AllowAny,)
 
 class GetMyChannel(generics.ListAPIView):
     def get_queryset(self):
         c = m.ChannelMembers.objects.filter(user=self.request.user.id)
         return c
-    serializer_class = Serializer
+    serializer_class = ChannelMemberSerializer
     permission_classes = (IsAuthenticated,)
 
 
